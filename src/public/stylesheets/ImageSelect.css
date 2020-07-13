@@ -1,0 +1,33 @@
+/* Tag image */
+.chose-image {
+	width:25px;
+	height:25px;
+	vertical-align: middle;
+	border-radius: 50%;
+	margin-left: 5px;
+}
+
+/* Image for Single mode */
+.chose-image-small {
+	width:18px;
+	height:18px;
+	vertical-align: middle;
+	border-radius: 50%;
+	margin: -3px 0 0 0;
+	padding: 0 3px 0 0;
+}
+
+/* Images appended to the li(s) */
+.chose-image-list {
+	width:18px;
+	height:18px;
+	vertical-align: middle;
+	border-radius: 50%;
+	margin: -3px 0 0 0;
+	padding: 0 3px 0 0;
+}
+
+/* Grey-out image for Multi mode */
+div.chosen-container-multi .result-selected img {
+	opacity: 0.3;
+}

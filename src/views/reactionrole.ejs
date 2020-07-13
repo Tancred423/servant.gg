@@ -1,0 +1,152 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Dashboard: <%= guild.name %> — Moderation: Reaction Role</title>
+<meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Reaction Role">
+<meta name="description" content="Let users get roles by choice!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/<%= guild.id %>/moderation/reactionrole">
+<meta property="og:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Reaction Role">
+<meta property="og:description" content="Let users get roles by choice!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/<%= guild.id %>/moderation/reactionrole">
+<meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Reaction Role">
+<meta property="twitter:description" content="Let users get roles by choice!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-dash') -%>
+
+<script>
+  var botRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
+  var botChannels = <%- JSON.stringify(botGuild.channels.cache) %>;
+  var var_is_supporter = <%- JSON.stringify(isSupporter); %>;
+  var var_color_code = <%- JSON.stringify(color_code); %>;
+  var var_guild = <%- JSON.stringify(guild); %>;
+  var var_rr_msgs = <%- JSON.stringify(rr_msgs) %>;
+  var var_rr_fields = <%- JSON.stringify(rr_fields) %>;
+  var var_rr_roles_emojis = <%- JSON.stringify(rr_roles_emojis) %>;
+  var var_timestamp_tzs = <%- JSON.stringify(timestamp_tz_formats) %>;
+  var varRrAmount = <%- JSON.stringify(rrAmount); %>;
+</script>
+
+<% var plugin = 'checked'; %>
+<% if (disabled_plugins[0]) { %>
+<% plugin = '';  %>
+<% } %>
+
+<div class="main-wrapper">
+  <div class="dash-user-wrapper">
+    <div class="dash-featured">
+      <div id="meta"></div>
+      <h1>Dashboard:
+        <% if (guild.icon === null) { %>
+        <img src="/images/no_user.png" alt="Default Server Icon">
+        <% } else { %>
+        <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+        <% } %>
+        <%= guild.name %>
+      </h1>
+      <div class="path"><a href="/">Home</a> > <a href="/dashboard">Dashboard</a> > <a href="/dashboard/<%= guild.id %>"><%= guild.name %></a> > <a href="/dashboard/<%= guild.id %>/moderation">Moderation</a> > <a href="/dashboard/<%= guild.id %>/moderation/reactionrole">Reaction Role</a></div>
+    </div>
+    <div class="main-content banner">
+      <div class="padding-top padding-bottom padding-left padding-right">
+        <div class="global-switch">
+          <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+          <span><i class="fas fa-user-cog"></i> Reaction Role Plugin</span>
+          <label class="switch">
+            <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'reactionrole')" <%= plugin %> />
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="com-sub-featured">
+      <div class="padding-top padding-bottom padding-left padding-right">
+
+        <!-- Trigger/Open The Modal -->
+        <button id="reactionrole-modal-create-button" class="btn-redirect center-button mobile-right" onclick="open_modal_create(this);">+ Create</button>
+
+        <div id="cc_amount_wrapper">
+          <div id="cc_amount">
+            Total messages: <%= rrAmount %> / 20
+          </div>
+        </div>
+
+        <!-- The message list -->
+        <% if (rr_msgs.length > 0) { %>
+        <% for (let i = 0; i < rr_msgs.length; i++) { %>
+        <div class="rr-msg">
+          <div class="rr-tc-name">
+            #<%= botGuild.channels.cache.get(rr_msgs[i].tc_id).name %>
+          </div>
+          <div class="rr-emojis">
+            <% let emojis = []; %>
+            <% if (rr_roles_emojis.length > 0) { %>
+            <%  for (let j = 0; j < rr_roles_emojis.length; j++) { %>
+            <%    if (rr_roles_emojis[j].msg_id == rr_msgs[i].msg_id) { %>
+            <%      if (!emojis.includes(rr_roles_emojis[j].emoji)) { %>
+            <%        emojis.push(rr_roles_emojis[j].emoji); %>
+            <%      } %>
+            <%    } %>
+            <%  } %>
+            <% } %>
+            <% emojis.forEach(emoji => { %>
+            <span class="rr-emoji-name"><%= emoji %></span>
+            <% }); %>
+          </div>
+          <div class="rr-roles">
+            <% let roles = []; %>
+            <% if (rr_roles_emojis.length > 0) { %>
+            <%  for (let j = 0; j < rr_roles_emojis.length; j++) { %>
+            <%    if (rr_roles_emojis[j].msg_id == rr_msgs[i].msg_id) { %>
+            <%      if (!roles.includes(rr_roles_emojis[j].role_id)) { %>
+            <%        roles.push(rr_roles_emojis[j].role_id); %>
+            <%      } %>
+            <%    } %>
+            <%  } %>
+            <% } %>
+            <% roles.forEach(role => { %>
+            <% let colorcode = role == '0' ? 'FFFFFF' : (botGuild.roles.cache.get(role).color == '0' ? 'FFFFFF' : botGuild.roles.cache.get(role).color.toString(16)); %>
+            <span class="rr-role-name" style="color: #<%= colorcode %>;"><%= role == '0' ? 'Name not found' : botGuild.roles.cache.get(role).name %></span>
+            <% }); %>
+          </div>
+          <div class="edit-buttons rr">
+            <div class="edit-button">
+              <button id="reactionrole-modal-edit-button" class="btn-redirect empty" name="<%= rr_msgs[i].msg_id %>" onclick="open_modal_edit(this);">
+                <i class="fas fa-edit"></i> <span class="hide-on-mobile">Edit</span>
+              </button>
+            </div>
+            <div class="delete-button">
+              <button id="reactionrole-delete-button" class="btn-redirect btn-danger empty" name="<%= guild.id %>|<%= rr_msgs[i].tc_id %>|<%= rr_msgs[i].msg_id %>" onclick="delete_rr(this);">
+                <i class="fas fa-trash"></i> <span class="hide-on-mobile">Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <% } %>
+        <% } %>
+
+        <div id="modals-wrapper">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') -%>

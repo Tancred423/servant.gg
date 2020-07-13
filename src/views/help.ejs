@@ -1,0 +1,77 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Help</title>
+<meta name="title" content="Servant | Help — Commands and Usage">
+<meta name="description" content="Moderation | Role & Channel Management | Leveling | Giveaways | Polls | Social Interactions | Much more!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/help">
+<meta property="og:title" content="Servant | Help — Commands and Usage">
+<meta property="og:description" content="Moderation | Role & Channel Management | Leveling | Giveaways | Polls | Social Interactions | Much more!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/help">
+<meta property="twitter:title" content="Servant | Help — Commands and Usage">
+<meta property="twitter:description" content="Moderation | Role & Channel Management | Leveling | Giveaways | Polls | Social Interactions | Much more!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-comm') -%>
+
+<div class="main-wrapper">
+  <div class="commands-wrapper">
+    <div class="commands-featured">
+      <div id="meta"></div>
+      <h1>Help</h1>
+    </div>
+    <div class="main-content">
+      <div class="tab">
+        <button class="tablinks grp-a" onclick="openComm(event, 'Standard')" id="defaultOpen"><i class="fas fa-info-circle"></i> Standard</button>
+        <button class="tablinks grp-b" onclick="openComm(event, 'Moderation')"><i class="fas fa-user-cog"></i> Moderation</button>
+        <button class="tablinks grp-c" onclick="openComm(event, 'Utility')"><i class="far fa-lightbulb"></i> Utility</button>
+        <button class="tablinks grp-d" onclick="openComm(event, 'Fun')"><i class="fas fa-volleyball-ball"></i> Fun</button>
+        <button class="tablinks grp-e" onclick="openComm(event, 'Interaction')"><i class="far fa-comments"></i> Interaction</button>
+        <button class="tablinks grp-f" onclick="openComm(event, 'Random')"><i class="fas fa-dice"></i> Random</button>
+      </div>
+
+      <div id="Standard" class="tabcontent">
+        <%- include('partials/commands/standard') -%>
+      </div>
+
+      <div id="Moderation" class="tabcontent">
+        <%- include('partials/commands/moderation') -%>
+      </div>
+
+      <div id="Utility" class="tabcontent">
+        <%- include('partials/commands/utility') -%>
+      </div>
+
+      <div id="Fun" class="tabcontent">
+        <%- include('partials/commands/fun') -%>
+      </div>
+
+      <div id="Interaction" class="tabcontent">
+        <%- include('partials/commands/interaction') -%>
+      </div>
+
+      <div id="Random" class="tabcontent">
+        <%- include('partials/commands/random') -%>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') -%>

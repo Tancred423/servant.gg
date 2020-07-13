@@ -1,0 +1,60 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Dashboard</title>
+<meta name="title" content="Servant | Dashboard — Manage your servers!">
+<meta name="description" content="Manage personal and server settings. Toggle features, categories, commands and plugins!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,useful,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/donate">
+<meta property="og:title" content="Servant | Dashboard — Manage your servers!">
+<meta property="og:description" content="Manage personal and server settings. Toggle features, categories, commands and plugins!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/donate">
+<meta property="twitter:title" content="Servant | Dashboard — Manage your servers!">
+<meta property="twitter:description" content="Manage personal and server settings. Toggle features, categories, commands and plugins!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-dash') -%>
+
+<div class="main-wrapper">
+    <div class="dash-wrapper">
+        <div class="dash-featured">
+            <div id="meta"></div>
+            <h1>Dashboard</h1>
+            <div class="path"><a href="/">Home</a> > <a href="/dashboard">Dashboard</a></div>
+        </div>
+        <div class="main-content padding-top padding-left padding-right padding-bottom">
+            <div id="dashboard-content">
+                <%- include('partials/user_settings') -%>
+
+                <!-- Hide one divider depending on window size -->
+                <div class="dashboard-divider-h">
+                    <%- include('partials/divider-h') -%>
+                </div>
+                <div class="dashboard-divider-v">
+                    <%- include('partials/divider-v') -%>
+                </div>
+
+
+                <%- include('partials/moderate_guilds') -%>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') -%>

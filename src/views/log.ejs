@@ -1,0 +1,342 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Dashboard: <%= guild.name %> — Moderation: Log</title>
+<meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Log">
+<meta name="description" content="Let users vote for the best images on your server!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/<%= guild.id %>/moderation/log">
+<meta property="og:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Log">
+<meta property="og:description" content="Let users vote for the best images on your server!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/<%= guild.id %>/moderation/log">
+<meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Log">
+<meta property="twitter:description" content="Let users vote for the best images on your server!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-dash') -%>
+
+<% var plugin = 'checked'; %>
+<% if (disabled_plugins[0]) { %>
+<% plugin = '';  %>
+<% } %>
+
+<% let tc_id = '0'; %>
+<% let msg_update = ''; %>
+<% let msg_delete = ''; %>
+<% let reactions_remove = ''; %>
+<% let category_create = ''; %>
+<% let category_delete = ''; %>
+<% let vc_create = ''; %>
+<% let vc_delete = ''; %>
+<% let vc_join = ''; %>
+<% let vc_move = ''; %>
+<% let vc_leave = ''; %>
+<% let tc_create = ''; %>
+<% let tc_delete = ''; %>
+<% let user_ban = ''; %>
+<% let user_unban = ''; %>
+<% let invite_create = ''; %>
+<% let invite_delete = ''; %>
+<% let user_join = ''; %>
+<% let user_leave = ''; %>
+<% let role_add = ''; %>
+<% let role_remove = ''; %>
+<% let role_create = ''; %>
+<% let role_delete = ''; %>
+<% let emote_add = ''; %>
+<% let emote_remove = ''; %>
+<% let boost_count = ''; %>
+<% let boost_tier = ''; %>
+
+<% let log; %>
+<% if (logs.length > 0) { %>
+<% log = logs[0]; %>
+<% } %>
+
+<% if (log !== undefined) { %>
+<% tc_id = log.tc_id; %>
+<% msg_update = log.msg_update ? 'checked' : ''; %>
+<% msg_delete = log.msg_delete ? 'checked' : ''; %>
+<% reactions_remove = log.reactions_remove ? 'checked' : ''; %>
+<% category_create = log.category_create ? 'checked' : ''; %>
+<% category_delete = log.category_delete ? 'checked' : ''; %>
+<% vc_create = log.vc_create ? 'checked' : ''; %>
+<% vc_delete = log.vc_delete ? 'checked' : ''; %>
+<% vc_join = log.vc_join ? 'checked' : ''; %>
+<% vc_move = log.vc_move ? 'checked' : ''; %>
+<% vc_leave = log.vc_leave ? 'checked' : ''; %>
+<% tc_create = log.tc_create ? 'checked' : ''; %>
+<% tc_delete = log.tc_delete ? 'checked' : ''; %>
+<% user_ban = log.user_ban ? 'checked' : ''; %>
+<% user_unban = log.user_unban ? 'checked' : ''; %>
+<% invite_create = log.invite_create ? 'checked' : ''; %>
+<% invite_delete = log.invite_delete ? 'checked' : ''; %>
+<% user_join = log.user_join ? 'checked' : ''; %>
+<% user_leave = log.user_leave ? 'checked' : ''; %>
+<% role_add = log.role_add ? 'checked' : ''; %>
+<% role_remove = log.role_remove ? 'checked' : ''; %>
+<% role_create = log.role_create ? 'checked' : ''; %>
+<% role_delete = log.role_delete ? 'checked' : ''; %>
+<% emote_add = log.emote_add ? 'checked' : ''; %>
+<% emote_remove = log.emote_remove ? 'checked' : ''; %>
+<% boost_count = log.boost_count ? 'checked' : ''; %>
+<% boost_tier = log.boost_tier ? 'checked' : ''; %>
+<% } %>
+
+<div class="main-wrapper">
+    <div class="dash-user-wrapper">
+        <div class="dash-featured">
+            <div id="meta"></div>
+            <h1>Dashboard:
+                <% if (guild.icon === null) { %>
+                <img src="/images/no_user.png" alt="Default Server Icon">
+                <% } else { %>
+                <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+                <% } %>
+                <%= guild.name %>
+            </h1>
+            <div class="path"><a href="/">Home</a> > <a href="/dashboard">Dashboard</a> > <a href="/dashboard/<%= guild.id %>"><%= guild.name %></a> > <a href="/dashboard/<%= guild.id %>/moderation">Moderation</a> > <a href="/dashboard/<%= guild.id %>/moderation/log">Log</a></div>
+        </div>
+        <div class="main-content banner">
+            <div class="padding-top padding-bottom padding-left padding-right">
+                <div class="global-switch">
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <span><i class="fas fa-user-cog"></i> Log Plugin</span>
+                    <label class="switch">
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'log')" <%= plugin %>>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="plugin-sub-featured">
+            <div class="container">
+                <div class="container-title">
+                    <div class="left">
+                        <h2>Log</h2>
+                    </div>
+                    <div class="right">
+                        <div class="right-left">
+                            <span class="circle-label"></span>
+                        </div>
+                        <div class="right-right">
+                            <div class="circle-loader">
+                                <div class="checkmark draw"></div>
+                                <div class="errormark draw"></div>
+                                <div class="errormark2 draw"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="padding-top padding-bottom padding-left padding-right">
+                    <form action="/submit/log" method="POST" id="form_log">
+                        <div class="settings-disclaimer">
+                            <div>This is the text channel the log will be posted in.</div>
+                            <br />
+                            <div class="form-group">
+                                <% let default_selected = ''; %>
+                                <% if (tc_id === '0') { %>
+                                <% default_selected = 'selected'; %>
+                                <% } %>
+
+                                <select id="tc" name="tc" onchange="changeTcSel(this);submit_log();">
+                                    <option value="0" <%= default_selected %>>No text channel</option>
+                                    <% botGuild.channels.cache.forEach(channel => { %>
+                                    <% if (channel.type === 'text' || channel.type === 'news') { %>
+                                    <% let selected = '' %>
+                                    <% if (channel.id === tc_id) { %>
+                                    <% selected = 'selected'; %>
+                                    <% } %>
+                                    <% let category_name = channel.parent == null ? "" : "(" + channel.parent.name + ")"; %>
+                                    <option value="<%= channel.id %>" <%= selected %>>#<%= channel.name %> <%= category_name %></option>
+                                    <% } %>
+                                    <% }); %>
+                                </select>
+                                <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
+                            </div>
+                        </div>
+
+                        <div class="settings-disclaimer">
+                            <div>What would you like to be notified for?</div>
+                            <div class="log-checkboxes">
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= msg_update %> id="msg_update" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Message updated
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= msg_delete %> id="msg_delete" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Message deleted
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= category_create %> id="category_create" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Category created
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= category_delete %> id="category_delete" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Category deleted
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= vc_create %> id="vc_create" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Voice channel created <span class="red">*</span>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= vc_delete %> id="vc_delete" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Voice channel removed <span class="red">*</span>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= vc_join %> id="vc_join" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Voice channel joined <span class="red">*</span>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= vc_move %> id="vc_move" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Voice channel moved <span class="red">*</span>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= vc_leave %> id="vc_leave" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Voice channel left <span class="red">*</span>
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= tc_create %> id="tc_create" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Text channel created
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= tc_delete %> id="tc_delete" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Text channel deleted
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= user_ban %> id="user_ban" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        User banned
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= user_unban %> id="user_unban" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        User unbanned
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= invite_create %> id="invite_create" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Invite created
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= invite_delete %> id="invite_delete" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Invite deleted
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= user_join %> id="user_join" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        User joined
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= user_leave %> id="user_leave" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        User left
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= role_add %> id="role_add" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        User received role(s)
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= role_remove %> id="role_remove" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        User got role(s) removed
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= role_create %> id="role_create" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Role created
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= role_delete %> id="role_delete" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Role deleted
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= emote_add %> id="emote_add" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Emote added
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= emote_remove %> id="emote_remove" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Emote removed
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= boost_count %> id="boost_count" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Boost count updated
+                                    </label>
+                                </div>
+                                <div class="checkbox">
+                                    <label>
+                                        <input <%= boost_tier %> id="boost_tier" name="events" type="checkbox" onchange="handle_log_checks();"><i class="helper"></i>
+                                        Boost tier updated
+                                    </label>
+                                </div>
+                            </div>
+                            <br />
+                            <span class="red">*</span> This can be very spam heavy if you are using the voice lobby plugin.
+                        </div>
+
+                        <!-- to include it in url params -->
+                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') -%>

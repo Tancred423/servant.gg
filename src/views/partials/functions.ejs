@@ -1,0 +1,26 @@
+<%
+getLevelFromExp = function(exp) {
+    let remaining_exp = exp;
+    let level = 0;
+    while (remaining_exp >= getLevelExp(level)) {
+        remaining_exp -= getLevelExp(level);
+        level++;
+    }
+    return level;
+}
+
+getLevelExp = function (level) {
+    return 5*(level*level)+50*level+100;
+}
+
+getTotalLevelExp = function (level) {
+    let totalExp = 0;
+    for (let i = level; i >= 0; i--) totalExp += getLevelExp(i);
+    return totalExp;
+}
+
+getLevelPercent = function (hasExp, needsExp) {
+    return Math.floor(hasExp / needsExp * 100);
+}
+
+%>

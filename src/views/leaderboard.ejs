@@ -1,0 +1,101 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Leaderboard</title>
+<meta name="title" content="Servant | Leaderboard">
+<meta name="description" content="Choose a server and see all the rankings!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/leaderboard">
+<meta property="og:title" content="Servant | Leaderboard">
+<meta property="og:description" content="Choose a server and see all the rankings!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/leaderboard">
+<meta property="twitter:title" content="Servant | Leaderboard">
+<meta property="twitter:description" content="Choose a server and see all the rankings!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-lead') -%>
+
+<div class="main-wrapper">
+  <div class="lead-wrapper">
+    <div class="lead-featured">
+      <div id="meta"></div>
+      <h1>Leaderboard</h1>
+      <div class="path"><a href="/">Home</a> > <a href="/leaderboard">Leaderboard</a></div>
+    </div>
+    <div class="main-content">
+      <div class="padding-top padding-bottom padding-left padding-right">
+        <div class="leaderboard-wrapper">
+          <h2>Choose a server to display its leaderboard</h2>
+
+          <% var guilds = req.user.guilds %>
+
+          <% guilds.forEach(guild => { %>
+          <% if (guild.id !== '264445053596991498') { // Exclude Discord Bot List %>
+
+          <% var botIsOnGuild = false; %>
+          <% if (bot.guilds.cache.get(guild.id) !== undefined) botIsOnGuild = true; %>
+
+          <% var levelingIsDisabled = lvlDisabledGuilds.indexOf(guild.id) > -1; %>
+          <% var guildHasEntry = allGuilds.indexOf(guild.id) > -1; %>
+          <% let moderationIsDisabled = lvlDisabledModeration.indexOf(guild.id) > -1; %>
+
+          <div class="dashboard-button-margin"></div>
+          <% if (botIsOnGuild) { %>
+          <% if (guildHasEntry && !levelingIsDisabled && !moderationIsDisabled) { %>
+          <a href="/leaderboard/<%= guild.id %>" class="dashboard-button">
+            <div class="guild-name">
+              <% if (guild.icon === null) { %>
+              <img src="/images/no_user.png" alt="Default Server Icon">
+              <% } else { %>
+              <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+              <% } %>
+              <span><%= guild.name %></span>
+            </div>
+
+            <div class="guild-invite">
+              <input class="btn-redirect" type="submit" value="Leaderboard" />
+            </div>
+          </a>
+          <% } else { %>
+          <div class="dashboard-button-disabled">
+            <div class="guild-name">
+              <% if (guild.icon === null) { %>
+              <img src="images/no_user.png" alt="Default Server Icon">
+              <% } else { %>
+              <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+              <% } %>
+              <span><%= guild.name %></span>
+            </div>
+
+            <div class="guild-invite">
+              <input class="btn-redirect empty" type="submit" value="Leveling Disabled" />
+            </div>
+          </div>
+          <% } %>
+          <% } %>
+          <% } %>
+          <% }); %>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') -%>

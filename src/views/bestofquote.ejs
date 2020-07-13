@@ -1,0 +1,176 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Dashboard: <%= guild.name %> — Moderation: Best of Quote</title>
+<meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Best of Quote">
+<meta name="description" content="Let users vote for the best quotes on your server!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/<%= guild.id %>/moderation/bestofquote">
+<meta property="og:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Best of Quote">
+<meta property="og:description" content="Let users vote for the best quotes on your server!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/<%= guild.id %>/moderation/bestofquote">
+<meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Best of Quote">
+<meta property="twitter:description" content="Let users vote for the best quotes on your server!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-dash') -%>
+
+<script>
+    var boqs = <%- JSON.stringify(boqs) %>;
+</script>
+
+<% var plugin = 'checked'; %>
+<% if (disabled_plugins[0]) { %>
+<% plugin = '';  %>
+<% } %>
+
+
+<% let percentage; %>
+<% let flat; %>
+<% let tc_id; %>
+<% let emoji; %>
+
+<% let boq; %>
+<% if (boqs.length > 0) { %>
+<% boq = boqs[0]; %>
+<% } %>
+
+<% if (boq !== undefined) { %>
+<% percentage = boq.min_votes_percent; %>
+<% flat = boq.min_votes_flat; %>
+<% tc_id = boq.tc_id; %>
+<% emoji = boq.emoji; %>
+<% } else { %>
+<% percentage = ''; %>
+<% flat = ''; %>
+<% tc_id = '0'; %>
+<% emoji = '⭐'; %>
+<% } %>
+<% if (percentage == 0) percentage = ''; %>
+<% if (flat == 0) flat = ''; %>
+
+<% let percentage_req = ''; %>
+<% if (percentage) percentage_req = 'required'; %>
+
+<% let flat_req = ''; %>
+<% if (flat) flat_req = 'required'; %>
+
+<div class="main-wrapper">
+    <div class="dash-user-wrapper">
+        <div class="dash-featured">
+            <div id="meta"></div>
+            <h1>Dashboard:
+                <% if (guild.icon === null) { %>
+                <img src="/images/no_user.png" alt="Default Server Icon">
+                <% } else { %>
+                <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+                <% } %>
+                <%= guild.name %>
+            </h1>
+            <div class="path"><a href="/">Home</a> > <a href="/dashboard">Dashboard</a> > <a href="/dashboard/<%= guild.id %>"><%= guild.name %></a> > <a href="/dashboard/<%= guild.id %>/moderation">Moderation</a> > <a href="/dashboard/<%= guild.id %>/moderation/bestofquote">Best of Quote</a></div>
+        </div>
+        <div class="main-content banner">
+            <div class="padding-top padding-bottom padding-left padding-right">
+                <div class="global-switch">
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <span><i class="fas fa-user-cog"></i> Best of Quote Plugin</span>
+                    <label class="switch">
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'bestofquote')" <%= plugin %>>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="plugin-sub-featured">
+            <div class="container">
+                <div class="container-title">
+                    <div class="left">
+                        <h2>Best of Quote</h2>
+                    </div>
+                    <div class="right">
+                        <div class="right-left">
+                            <span class="circle-label"></span>
+                        </div>
+                        <div class="right-right">
+                            <div class="circle-loader">
+                                <div class="checkmark draw"></div>
+                                <div class="errormark draw"></div>
+                                <div class="errormark2 draw"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="padding-top padding-bottom padding-left padding-right">
+                    <form action="/submit/bestofquote" method="POST" id="form_boq">
+                        <div class="settings-disclaimer">
+                            <div>This is the amount of people who have to vote.<br />
+                                E.g. 40% of the online people have to vote, but at least 10 people!
+                            </div>
+                            <br />
+                            <div class="form-group">
+                                <input onkeyup="setRequired(this);handle_percentage_boq(this);" type="number" name="percentage" id="percentage" value="<%= percentage %>" <%= percentage_req %>>
+                                <label for="percentage" class="control-label">Percentage of online members</label><i class="bar"></i>
+                            </div>
+                            <div class="form-group">
+                                <input onkeyup="setRequired(this);handle_flat_boq(this)" type="number" name="flat" id="flat" value="<%= flat %>" <%= flat_req %>>
+                                <label for="flat" class="control-label">Flat amout of members</label><i class="bar"></i>
+                            </div>
+                        </div>
+                        <div class="settings-disclaimer">
+                            <div>This is the text channel the best quotes will be posted in.</div>
+                            <br />
+                            <div class="form-group">
+                                <% let default_selected = ''; %>
+                                <% if (tc_id === '0') { %>
+                                <% default_selected = 'selected'; %>
+                                <% } %>
+
+                                <select id="tc" name="tc" onchange="changeTcSel(this);submit_bestofquote();">
+                                    <option value="0" <%= default_selected %>>No text channel</option>
+                                    <% botGuild.channels.cache.forEach(channel => { %>
+                                    <% if (channel.type === 'text' || channel.type === 'news') { %>
+                                    <% let selected = '' %>
+                                    <% if (channel.id === tc_id) { %>
+                                    <% selected = 'selected'; %>
+                                    <% } %>
+                                    <option value="<%= channel.id %>" <%= selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
+                                    <% } %>
+                                    <% }); %>
+                                </select>
+                                <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
+                            </div>
+                        </div>
+                        <div class="settings-disclaimer">
+                            <div>This is the emoji your members will vote with.</div>
+                            <br />
+                            <div class="form-group">
+                                <div class="picker" id="picker_0"><%= emoji %></div>
+                                <div class="picker-label">Emoji</div>
+                            </div>
+                        </div>
+                        <!-- to include it in url params -->
+                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') -%>

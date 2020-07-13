@@ -1,0 +1,145 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Leaderboard: <%= guild.name %></title>
+<meta name="title" content="Servant | Leaderboard: <%= guild.name %>">
+<meta name="description" content="See all the rankings of <%= guild.name %>!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/leaderboard/<%= guild.id %>">
+<meta property="og:title" content="Servant | Leaderboard: <%= guild.name %>">
+<meta property="og:description" content="See all the rankings of <%= guild.name %>!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/leaderboard/<%= guild.id %>">
+<meta property="twitter:title" content="Servant | Leaderboard: <%= guild.name %>">
+<meta property="twitter:description" content="See all the rankings of <%= guild.name %>!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-lead') -%>
+<%- include('partials/functions') -%>
+
+<div class="main-wrapper">
+  <div class="lead-wrapper">
+    <div class="lead-featured">
+      <div id="meta"></div>
+      <h1>Leaderboard:
+        <% if (guild.icon === null) { %>
+        <img src="images/no_user.png" alt="Default Server Icon">
+        <% } else { %>
+        <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+        <% } %>
+        <%= guild.name %>
+      </h1>
+      <div class="path"><a href="/">Home</a> > <a href="/leaderboard">Leaderboard</a> > <a href="/leaderboard/<%= guild.id %>"><%= guild.name %></a></div>
+    </div>
+    <% var hidden = isAuthorized ? '' : 'hidden'; %>
+    <div class="main-content banner <%= hidden %>">
+      <div class="padding-top padding-bottom padding-left padding-right">
+        <div class="global-switch danger-switch">
+          <span class="red"><i class="fas fa-edit"></i> Danger mode</span>
+          <label class="switch">
+            <input name="danger_mode" id="danger_mode" type="checkbox">
+            <span class="slider round slider-red"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="com-sub-featured">
+      <div class="padding-top padding-bottom padding-left padding-right">
+        <div class="leaderboard-wrapper">
+          <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't delete member(s)."></div>
+          <div class="danger-area <%= hidden %>" id="danger-area">
+            <button class="btn-redirect empty btn-danger" id="prune-members" name="<%= guild.id %>" onclick="submit_prune_members(this);">Reset members who left this server</button>
+            <button class="btn-redirect btn-danger" id="reset-members" name="<%= guild.id %>" onclick="submit_reset_members(this);">Reset ALL members</button>
+          </div>
+
+          <% if (exps.length == 0) { %>
+          <div>No entries</div>
+          <% } else { %>
+          <% let counter = 1; %>
+          <% exps.forEach(exp => { %>
+
+          <% let currentExp = exp.exp; %>
+          <% let currentLevel = getLevelFromExp(currentExp); %>
+          <% let neededExp = getLevelExp(currentLevel); %>
+          <% let currentExpOnThisLevel = currentExp - getTotalLevelExp(currentLevel - 1); %>
+          <% let percent = getLevelPercent(currentExpOnThisLevel, neededExp); %>
+
+          <% let user = bot.users.cache.get(exp.user_id); %>
+
+          <% if (user !== undefined) { %>
+
+          <div class="block">
+            <div class="lead-user-wrapper">
+              <div class="delete-user-fake <%= hidden %>"></div>
+              <div class="hidden lead-user-id"><%= exp.user_id %></div>
+              <div class="lead-user">
+                <div class="lead-content">
+                  <div class="place">
+                    <div class="place-medal <%= counter === 1 ? 'first' : counter === 2 ? 'second' : counter === 3 ? 'third' : '' %>">
+                      <%= counter %>
+                    </div>
+                  </div>
+                  <div class="name">
+                    <% if (user === undefined) { %>
+                    <img src="/images/no_user.png" alt="Default Avatar">
+                    <% } else { %>
+                    <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png">
+                    <% } %>
+                    <%= user == undefined ? "Name not found" : user.username %>
+                  </div>
+                  <div class="exp">
+                    <div class="exp-medal">
+                      <div class="left">
+                        <%= currentExpOnThisLevel %>
+                      </div>
+                      <div class="slash">
+                        /
+                      </div>
+                      <div class="middle">
+                        <%= neededExp %>
+                      </div>
+                      <div class="right">
+                        EXP
+                      </div>
+                    </div>
+                  </div>
+                  <div class="level">
+                    <div class="c100 p<%= percent %> small">
+                      <span><%= currentLevel %></span>
+                      <div class="slice">
+                        <div class="bar"></div>
+                        <div class="fill"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button class="delete-user <%= hidden %>" name="<%= guild.id %>|<%= exp.user_id %>" onclick="submit_reset_member(this);"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          <% counter++ %>
+          <% } %>
+          <% }) %>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') -%>

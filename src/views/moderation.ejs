@@ -1,0 +1,377 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Dashboard: <%= guild.name %> — Moderation</title>
+<meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation">
+<meta name="description" content="Toggle moderation commands and use plugins!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/<%= guild.id %>/moderation">
+<meta property="og:title" content="Servant | Dashboard: <%= guild.name %> — Moderation">
+<meta property="og:description" content="Toggle moderation commands and use plugins!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/<%= guild.id %>/moderation">
+<meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation">
+<meta property="twitter:description" content="Toggle moderation commands and use plugins!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-dash') -%>
+
+<% var moderation = 'checked'; %>
+<% if (disabled_categories[0]) { %>
+<% moderation = '';  %>
+<% } %>
+
+<div class="main-wrapper">
+    <div class="dash-user-wrapper">
+        <div class="dash-featured">
+            <div id="meta"></div>
+            <h1>Dashboard:
+                <% if (guild.icon === null) { %>
+                <img src="/images/no_user.png" alt="Default Server Icon">
+                <% } else { %>
+                <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+                <% } %>
+                <%= guild.name %>
+            </h1>
+            <div class="path"><a href="/">Home</a> > <a href="/dashboard">Dashboard</a> > <a href="/dashboard/<%= guild.id %>"><%= guild.name %></a> > <a href="/dashboard/<%= guild.id %>/moderation">Moderation</a></div>
+        </div>
+        <div class="main-content banner">
+            <div class="padding-top padding-bottom padding-left padding-right">
+                <div class="global-switch">
+                    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update category toggle."></div>
+                    <span><i class="fas fa-user-cog"></i> Moderation Category</span>
+                    <label class="switch">
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'moderation')" <%= moderation %>>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="com-sub-featured">
+            <div class="padding-top padding-bottom padding-left padding-right">
+                <h2>Commands</h2>
+                <div id="dismissible-item-com" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update command toggle."></div>
+                <% 
+				let checked;
+                for (let i = 0; i < commands.length; i++) {
+                    checked = 'checked';
+                    const command = commands[i];
+                    if (disabled_commands !== undefined) {
+                        for (let j = 0; j < disabled_commands.length; j++) {
+                            const dis_command = disabled_commands[j];
+                            if (dis_command.command_id === command.id) {
+                                checked = '';
+                            }
+                        }
+                    }
+                    %>
+
+                <div class="command-panel">
+                    <span><%= prefix %><%= command.name %></span>
+                    <label class="switch">
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_commands(this, '<%= command.name %>')" <%= checked %>>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <% } %>
+
+                <h2>Plugins</h2>
+                <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                <%
+                let autorole = 'checked';
+                let bestofimage = 'checked';
+                let bestofquote = 'checked';
+                let join = 'checked';
+                let leave = 'checked';
+                let livestream = 'checked';
+                let log = 'checked';
+                let mediaonlychannel = 'checked';
+                let reactionrole = 'checked';
+                let voicelobby = 'checked';
+                let birthday = 'checked';
+                let customcommands = 'checked';
+                for (let i = 0; i < disabled_plugins.length; i++) {
+                    const plugin = disabled_plugins[i];
+                    if (plugin.name === 'autorole') autorole = '';
+                    else if (plugin.name === 'bestofimage') bestofimage = '';
+                    else if (plugin.name === 'bestofquote') bestofquote = '';
+                    else if (plugin.name === 'join') join = '';
+                    else if (plugin.name === 'leave') leave = '';
+                    else if (plugin.name === 'livestream') livestream = '';
+                    else if (plugin.name === 'log') log = '';
+                    else if (plugin.name === 'mediaonlychannel') mediaonlychannel = '';
+                    else if (plugin.name === 'reactionrole') reactionrole = '';
+                    else if (plugin.name === 'voicelobby') voicelobby = '';
+                    else if (plugin.name === 'birthday') birthday = '';
+                    else if (plugin.name === 'customcommands') customcommands = '';
+                }
+                %>
+                <div class="plugins">
+                    <a href="/dashboard/<%= guild.id %>/moderation/autorole" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Auto Role
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'autorole')" <%= autorole %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Provide roles to new members</div>
+                            <div class="bullet"><i class="fas fa-users"></i> Multiple roles</div>
+                            <div class="bullet"><i class="fas fa-clock"></i> Optional delays</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/bestofimage" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Best of Image
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'bestofimage')" <%= bestofimage %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">User voted best-of's for images</div>
+                            <div class="bullet"><i class="fas fa-poll-h"></i> Members will vote</div>
+                            <div class="bullet"><i class="fas fa-check-circle"></i> Fully customizable settings</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/bestofquote" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Best of Quote
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'bestofquote')" <%= bestofquote %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">User voted best-of's for messages</div>
+                            <div class="bullet"><i class="fas fa-poll-h"></i> Members will vote</div>
+                            <div class="bullet"><i class="fas fa-check-circle"></i> Fully customizable settings</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/birthday" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Birthday
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'birthday')" <%= birthday %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Birthday management of your members</div>
+                            <div class="bullet"><i class="fas fa-list-alt"></i> Auto updating list</div>
+                            <div class="bullet"><i class="fas fa-bullhorn"></i> Birthday announcements</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/customcommands" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Custom Commands
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'customcommands')" <%= customcommands %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Create custom commands</div>
+                            <div class="bullet"><i class="fas fa-long-arrow-alt-up"></i> Up to 100</div>
+                            <div class="bullet"><i class="fas fa-check-circle"></i> Normal message and embed support</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/embed" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Embed
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Post a custom embed message</div>
+                            <div class="bullet"><i class="fas fa-check-circle"></i> Easy to build</div>
+                            <div class="bullet"><i class="fab fa-patreon"></i> Custom colours for supporters</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/join" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Join
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'join')" <%= join %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">A warm welcome message for new members</div>
+                            <div class="bullet"><i class="fas fa-comment-dots"></i> Customizable welcome message</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/leave" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Leave
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'leave')" <%= leave %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">A farewell message for leaving members</div>
+                            <div class="bullet"><i class="fas fa-comment-dots"></i> Customizable farewell message</div>
+                            <div class="bullet"><i class="fas fa-eye-slash"></i> Gone members can't read it anymore</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/level" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Level
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'level')" <%= levelToggle %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">A complete leveling system</div>
+                            <div class="bullet"><i class="fas fa-trophy"></i> With leaderboard</div>
+                            <div class="bullet"><i class="fas fa-users"></i> With roles upon level up</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/livestream" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Livestream
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'livestream')" <%= livestream %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Easy livestream management</div>
+                            <div class="bullet"><i class="fas fa-user"></i> Streamer Mode:<br />Announcement & role for streamers</div>
+                            <div class="bullet"><i class="fas fa-globe"></i> Public Mode:<br />Role for everybody who is streaming</div>
+                            <div class="bullet"><i class="fab fa-discord"></i> Does <strong>not</strong> need Twitch login</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/log" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Log
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'log')" <%= log %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Advanced audit log</div>
+                            <div class="bullet"><i class="fas fa-info-circle"></i> Choose the information you need</div>
+                            <div class="bullet"><i class="fas fa-trash"></i> Track deleted messages</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/mediaonlychannel" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Media-only Channel
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'mediaonlychannel')" <%= mediaonlychannel %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Clean media channels</div>
+                            <div class="bullet"><i class="fas fa-link"></i> Media and links are okay</div>
+                            <div class="bullet"><i class="fas fa-trash"></i> Other messages will be deleted</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/reactionrole" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Reaction Role
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'reactionrole')" <%= reactionrole %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Easy role management</div>
+                            <div class="bullet"><i class="fas fa-hand-pointer"></i> Members can choose what they want</div>
+                            <div class="bullet"><i class="fas fa-check-square"></i> Let members agree to the rules</div>
+                        </div>
+                    </a>
+                    <a href="/dashboard/<%= guild.id %>/moderation/voicelobby" class="plugin-panel">
+                        <div class="title">
+                            <div class="text">
+                                Voice Lobby
+                            </div>
+                            <div class="switch">
+                                <label class="switch">
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'voicelobby')" <%= voicelobby %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="description">
+                            <div class="bullet-main">Clean voice channel management</div>
+                            <div class="bullet"><i class="fas fa-plus"></i> Members can get their own channel</div>
+                            <div class="bullet"><i class="fas fa-trash"></i> If empty, it will be deleted again</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') -%>

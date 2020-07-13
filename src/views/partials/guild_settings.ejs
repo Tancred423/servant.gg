@@ -1,0 +1,161 @@
+<div class="container small dark">
+    <div class="container-title">
+        <div class="left">
+            <h2>Server Settings</h2>
+        </div>
+        <div class="right">
+            <div class="right-left">
+                <span class="circle-label"></span>
+            </div>
+            <div class="right-right">
+                <div class="circle-loader">
+                    <div class="checkmark draw"></div>
+                    <div class="errormark draw"></div>
+                    <div class="errormark2 draw"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form action="/submit/guild" method="POST" id="form_gs">
+        <% var prefix = ''; %>
+        <% var language = '0'; %>
+        <% var tz = '1'; %>
+        <% var achievements = null; %>
+        <% var cmddeletion = null; %>
+        <% var eastereggs = null; %>
+        <% var leveling = null; %>
+        <% var moc = null; %>
+
+        <% if (guilds.length > 0) { %>
+        <% prefix = guilds[0].prefix; %>
+        <% language = guilds[0].language_code; %>
+        <% tz = guilds[0].timezone_id; %>
+        <% } %>
+
+        <% if (guilds.length > 0) { %>
+        <% for (var i = 0; i < disabled_features.length; i++) { %>
+        <% if (disabled_features[i].feature_id === 1) achievements = ''; %>
+        <% if (disabled_features[i].feature_id === 2) eastereggs = ''; %>
+        <% if (disabled_features[i].feature_id === 3) leveling = ''; %>
+        <% if (disabled_features[i].feature_id === 4) cmddeletion = ''; %>
+        <% if (disabled_features[i].feature_id === 5) moc = ''; %>
+        <% } %>
+
+        <% if (achievements == null) achievements = 'checked'; %>
+        <% if (cmddeletion == null) cmddeletion = 'checked'; %>
+        <% if (eastereggs == null) eastereggs = 'checked'; %>
+        <% if (leveling == null) leveling = 'checked'; %>
+        <% if (moc == null) moc = 'checked'; %>
+        <% } else { %>
+        <% achievements = 'checked'; %>
+        <% eastereggs = 'checked'; %>
+        <% moc = 'checked'; %>
+        <% } %>
+
+        <% let required = ''; %>
+        <% if (prefix) required = 'required'; %>
+
+        <div class="both-groups">
+            <div class="left-group">
+                <h3>General</h3>
+                <div class="settings-disclaimer">
+                    <div>The prefix and language will affect all members on your server.</div>
+                    <br />
+                    <div class="form-group">
+                        <input onkeyup="setRequired(this);" id="prefix_gs" name="prefix_gs" type="text" maxlength="5" value="<%= prefix %>" <%= required %> />
+                        <label for="prefix_gs" class="control-label">Prefix (Default: !)</label><i class="bar"></i>
+                    </div>
+
+                    <div class="form-group">
+                        <select id="language_gs" name="language_gs">
+                            <% for (var i = 0; i < languages.length; i++) { %>
+                            <% var selected = language == '0' ? (languages[i].code == 'en_gb' ? 'selected' : '') : (language == languages[i].code ? "selected" : ""); %>
+                            <option value="<%= languages[i].code %>" <%= selected %>><%= languages[i].name %></option>
+                            <% } %>
+                        </select>
+                        <label for="language_gs" class="control-label">Language</label><i class="bar"></i>
+                    </div>
+                </div>
+
+                <div class="settings-disclaimer">
+                    <div>The timezone will be used to determine when to gratulate your members on their birthday.</div>
+                    <br />
+                    <div class="form-group">
+                        <select id="timezone" name="timezone">
+                            <% timezones.forEach(timezone => { %>
+                            <% let selected = tz === timezone.id ? "selected" : ""; %>
+                            <option value="<%= timezone.id %>" <%= selected %>><%= timezone.timezone %></option>
+                            <% }); %>
+                        </select>
+                        <label for="timezone" class="control-label">Timezone</label><i class="bar"></i>
+                    </div>
+                </div>
+
+                <div class="settings-disclaimer">
+                    <span class="mod-care"><i class="fas fa-exclamation"></i> CARE <i class="fas fa-exclamation"></i></span><br />
+                    Members with one of these roles can use commands from the moderation category and <strong>manage this dashboard of your server</strong>.<br />
+                    Treat this carefully like the administrator permission.
+                    <br />
+                    <br />
+                    <span class="multiple-select-label">Servant-Moderator Roles</span>
+
+                    <select onchange="submit_mod_roles();" id="mod_roles" name="mod_roles" data-placeholder="Select roles..." multiple class="chosen-select">
+                        <% botGuild.roles.cache.forEach(role => { %>
+
+                        <% let selected = ""; %>
+                        <% mod_roles.forEach(mod_role => { %>
+                        <% if (mod_role.role_id === role.id) { %>
+                        <% selected = "selected"; %>
+                        <% } %>
+                        <% }); %>
+
+                        <% if (role.name !== '@everyone') { %>
+                        <option value="<%= role.id %>" <%= selected %>>
+                            <%= role.name %>
+                        </option>
+                        <% } %>
+
+                        <% }); %>
+                    </select>
+                </div>
+            </div>
+
+            <div class="right-group">
+                <h3>Features</h3>
+                <div class="slider-setting underline">
+                    <span>Achievements</span>
+                    <div class="right">
+                        <label class="switch small">
+                            <input id="achievements" name="achievements" type="checkbox" <%= achievements %> onclick="submit_gs();">
+                            <span class="slider round small"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="slider-setting underline">
+                    <span>Command deletion</span>
+                    <div class="right">
+                        <label class="switch small">
+                            <input id="cmddeletion" name="cmddeletion" type="checkbox" <%= cmddeletion %> onclick="submit_gs();">
+                            <span class="slider round small"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="slider-setting underline">
+                    <span>Easter eggs</span>
+                    <div class="right">
+                        <label class="switch small">
+                            <input id="eastereggs" name="eastereggs" type="checkbox" <%= eastereggs %> onclick="submit_gs();">
+                            <span class="slider round small"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- to include it in url params -->
+        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+    </form>
+</div>

@@ -1,0 +1,68 @@
+<nav class="nav-wrapper">
+  <div class="logo-a-wrapper">
+    <a href="/">
+      <div class="logo-wrapper">
+        <div class="logo-left">
+          <img src="/images/servant_ava.png">
+          <div class="online-bg"></div>
+          <div class="online"></div>
+        </div>
+        <div class="logo-right">
+          <div class="logo-right-top">
+            <div class="logo-text">
+              <h1>Servant</h1>
+            </div>
+            <div class="logo-verified">
+              <span>✓ BOT</span>
+              <span class="tooltiptext">Verified Bot</span>
+            </div>
+          </div>
+          <div class="logo-right-bottom">
+            <div class="status-emote">
+              <img src="/images/servantLove.png">
+            </div>
+            <div class="status-text">
+              <h2>#StayAtHome</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <div class="burger-icon"><i class="fas fa-bars"></i> MENU</div>
+  </div>
+  <ul class="nav-items main-nav mobile-hide">
+    <li class="list-item home"><a href="/"><i class="fas fa-home"></i> Home</a></li>
+    <li class="list-item comm"><a href="/help"><i class="fas fa-book"></i> Help</a></li>
+    <li class="list-item faq"><a href="/faq"><i class="fas fa-question-circle"></i> FAQ</a></li>
+    <li class="list-item dona"><a href="/donate"><i class="fas fa-coins"></i> Donate</a></li>
+    <li class="list-item list-divider">|</li>
+    <li class="list-item">
+      <% if (req.user) { %>
+      <div class="user-logged-in">
+        <img src="https://cdn.discordapp.com/avatars/<%= req.user.discordId %>/<%= req.user.avatar %>.png">
+        <%= req.user.username %>
+        <i class="user-arrow fas fa-caret-down"></i>
+
+        <ul class="user-dropdown hide">
+          <a href="/dashboard">
+            <li class="dash"><i class="fas fa-sliders-h"></i> Dashboard</li>
+          </a>
+          <a href="/leaderboard">
+            <li class="lead"><i class="fas fa-trophy"></i> Leaderboard</li>
+          </a>
+          <a href="/auth/logout">
+            <li><span class="logout"><i class="fas fa-sign-out-alt"></i> Logout</span></li>
+          </a>
+        </ul>
+      </div>
+      <% } else { %>
+      <div class="login-icon">
+        <div onclick="login('<%= req.originalUrl %>');">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </div>
+      </div>
+      <% } %>
+    </li>
+  </ul>
+</nav>

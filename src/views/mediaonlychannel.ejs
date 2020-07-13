@@ -1,0 +1,140 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Dashboard: <%= guild.name %> — Moderation: Media-only Channel</title>
+<meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Media-only Channel">
+<meta name="description" content="Media-only channels with no conversations allowed!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/<%= guild.id %>/moderation/mediaonlychannel">
+<meta property="og:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Media-only Channel">
+<meta property="og:description" content="Media-only channels with no conversations allowed!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/<%= guild.id %>/moderation/mediaonlychannel">
+<meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Media-only Channel">
+<meta property="twitter:description" content="Media-only channels with no conversations allowed!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-dash') -%>
+
+<% var plugin = 'checked'; %>
+<% if (disabled_plugins[0]) { %>
+<% plugin = '';  %>
+<% } %>
+
+<% var moc_warning = 'checked'; %>
+<% if (disabled_features[0]) { %>
+<% moc_warning = ''; %>
+<% } %>
+
+<div class="main-wrapper">
+    <div class="dash-user-wrapper">
+        <div class="dash-featured">
+            <div id="meta"></div>
+            <h1>Dashboard:
+                <% if (guild.icon === null) { %>
+                <img src="/images/no_user.png" alt="Default Server Icon">
+                <% } else { %>
+                <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+                <% } %>
+                <%= guild.name %>
+            </h1>
+            <div class="path"><a href="/">Home</a> > <a href="/dashboard">Dashboard</a> > <a href="/dashboard/<%= guild.id %>"><%= guild.name %></a> > <a href="/dashboard/<%= guild.id %>/moderation">Moderation</a> > <a href="/dashboard/<%= guild.id %>/moderation/mediaonlychannel">Media-only Channel</a></div>
+        </div>
+        <div class="main-content banner">
+            <div class="padding-top padding-bottom padding-left padding-right">
+                <div class="global-switch">
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <span><i class="fas fa-user-cog"></i> Media-only Channel Plugin</span>
+                    <label class="switch">
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'mediaonlychannel')" <%= plugin %>>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="plugin-sub-featured">
+            <div class="container">
+                <div class="container-title">
+                    <div class="left">
+                        <h2>Media-only Channel</h2>
+                    </div>
+                    <div class="right">
+                        <div class="right-left">
+                            <span class="circle-label"></span>
+                        </div>
+                        <div class="right-right">
+                            <div class="circle-loader">
+                                <div class="checkmark draw"></div>
+                                <div class="errormark draw"></div>
+                                <div class="errormark2 draw"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="padding-top padding-bottom padding-left padding-right">
+                    <form action="/submit/mediaonlychannel" method="POST" id="form_mediaonlychannel">
+                        <div class="settings-disclaimer">
+                            <div class="command-panel-moc">
+                                <span class="cpm-left">
+                                    <div class="cpm-left-top">Media-only channel warning</div>
+                                    <div class="cpm-left-bottom">Upon deleting a message, Servant will post a warning that will be deleted after 30 seconds.</div>
+                                </span>
+                                <label class="switch">
+                                    <input name="moc_warning" id="moc_warning" type="checkbox" onclick="submit_mediaonlychannel();" <%= moc_warning %>>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <br />
+                        <br />
+
+                        <div class="settings-disclaimer">
+                            Declare text channels where only links and attachments are allowed. Other messages will be deleted.
+                            <br />
+                            <br />
+                            <span class="multiple-select-label">Media-only Channels</span>
+
+                            <select onchange="submit_mediaonlychannel();" id="moc_channels" name="moc_channels" data-placeholder="Select text channels..." multiple class="chosen-select">
+                                <% botGuild.channels.cache.forEach(channel => { %>
+                                <% if (channel.type === 'text' || channel.type === 'news') { %>
+
+                                <% let selected = ""; %>
+                                <% mediaonlychannels.forEach(moc => { %>
+                                <% if (moc.tc_id === channel.id) { %>
+                                <% selected = "selected"; %>
+                                <% } %>
+                                <% }); %>
+
+                                <option value="<%= channel.id %>" <%= selected %>>
+                                    #<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %>
+                                </option>
+                                <% } %>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <!-- to include it in url params -->
+                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') -%>

@@ -1,0 +1,296 @@
+<!--
+    Extra wrapper so the container is not the left side of
+    the grid causing the panel to be spread over the whole site.
+-->
+<div>
+    <div class="container small dark">
+        <div class="container-title">
+            <div class="left">
+                <h2>Personal Settings</h2>
+            </div>
+            <div class="right">
+                <div class="right-left">
+                    <span class="circle-label"></span>
+                </div>
+                <div class="right-right">
+                    <div class="circle-loader">
+                        <div class="checkmark draw"></div>
+                        <div class="errormark draw"></div>
+                        <div class="errormark2 draw"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <form action="/submit/user" method="POST" id="form_us">
+            <% let prefix = ''; %>
+            <% let bio = ''; %>
+            <% let language = '0'; %>
+            <% let color = '#7289da'; %>
+            <% let birthday; %>
+            <% let profile_bg_id; %>
+
+            <% if (result.length > 0) { %>
+            <% prefix = result[0].prefix; %>
+            <% bio = result[0].bio; %>
+            <% language = result[0].code %>
+            <% color = result[0].color_code; %>
+            <% birthday = result[0].birthday; %>
+            <% profile_bg_id = result[0].profile_bg_id; %>
+            <% } %>
+
+            <% let bg_1; %>
+            <% let bg_2; %>
+            <% let bg_3; %>
+            <% let bg_4; %>
+            <% let bg_5; %>
+            <% let bg_6; %>
+            <% let bg_7; %>
+            <% let bg_8; %>
+            <% let bg_9; %>
+
+            <% 
+            if (profile_bg_id == 0 || profile_bg_id == 1) { 
+                bg_1 = 'checked';
+            } else if (profile_bg_id == 2) {
+                bg_2 = 'checked'; 
+            } else if (profile_bg_id == 3) {
+                bg_3 = 'checked'; 
+            } else if (profile_bg_id == 4) {
+                bg_4 = 'checked'; 
+            } else if (profile_bg_id == 5) {
+                 bg_5 = 'checked'; 
+            } else if (profile_bg_id == 6) {
+                bg_6 = 'checked'; 
+            } else if (profile_bg_id == 7) {
+                bg_7 = 'checked'; 
+            } else if (profile_bg_id == 8) {
+                bg_8 = 'checked';
+            } else if (profile_bg_id == 9) {
+                bg_8 = 'checked';
+            }
+            %>
+
+            <% let bg_url_1; %>
+            <% let bg_url_2; %>
+            <% let bg_url_3; %>
+            <% let bg_url_4; %>
+            <% let bg_url_5; %>
+            <% let bg_url_6; %>
+            <% let bg_url_7; %>
+            <% let bg_url_8; %>
+            <% let bg_url_9; %>
+
+            <% 
+            bgs.forEach(bg => {
+                switch (bg.id) {
+                    case 1:
+                        bg_url_1 = bg.image_url;
+                    break;
+                    case 2:
+                        bg_url_2 = bg.image_url;
+                    break;
+                    case 3:
+                        bg_url_3 = bg.image_url;
+                    break;
+                    case 4:
+                        bg_url_4 = bg.image_url;
+                    break;
+                    case 5:
+                        bg_url_5 = bg.image_url;
+                    break;
+                    case 6:
+                        bg_url_6 = bg.image_url;
+                    break;
+                    case 7:
+                        bg_url_7 = bg.image_url;
+                    break;
+                    case 8:
+                        bg_url_8 = bg.image_url;
+                    break;
+                    case 9:
+                        bg_url_9 = bg.image_url;
+                    break;
+                
+                    default:
+                        break;
+                }
+            });
+            %>
+
+            <% let required = ''; %>
+            <% if (prefix) required = 'required'; %>
+
+            <div class="solo-group">
+                <div class="settings-disclaimer">
+                    <div>
+                        The personal prefix and language only applies in <strong>direct messages</strong>!<br />
+                        To change these options on your server, please use the corresponding server dashboard.
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <input onkeyup="setRequired(this);" id="prefix_us" name="prefix_us" type="text" maxlength="5" value="<%= prefix %>" <%= required %> />
+                        <label for="prefix_us" class="control-label">Prefix (Default: !)</label><i class="bar"></i>
+                    </div>
+
+                    <div class="form-group">
+                        <select id="language_us" name="language_us">
+                            <% for (var i = 0; i < languages.length; i++) { %>
+                            <% var selected = language == '0' ? (languages[i].code == 'en_gb' ? 'selected' : '') : (language == languages[i].code ? "selected" : ""); %>
+                            <option value="<%= languages[i].code %>" <%= selected %>><%= languages[i].name %></option>
+                            <% } %>
+                        </select>
+                        <label for="language_us" class="control-label">Language</label><i class="bar"></i>
+                    </div>
+                </div>
+
+                <% if (bio) required = 'required'; else required = ''; %>
+
+
+
+                <div class="settings-disclaimer">
+                    The birthday will affect birthday lists and gratulations.
+
+                    <div class="button-container">
+                        <button onclick="submit_bday_clear();" id="birthday-clear" name="birthday-clear" type="button" class="btn-redirect empty small"><span>Clear birthday</span></button>
+                    </div>
+
+                    <br />
+
+                    <div class="form-group">
+                        <input onchange="submit_bday()" id="birthday" name="birthday" type="date" value="<%= birthday != '0000-00-00' ? birthday : '' %>" required />
+                        <label for="birthday" class="control-label">Birthday</label><i class="bar"></i>
+                    </div>
+                    <div>Select servers that are allowed to see your birthday.</div>
+
+                    <span class="multiple-select-label">Birthday Servers</span>
+
+                    <select onchange="submit_bday_guilds();" id="bday-guilds" name="bday-guilds" data-placeholder="Select servers..." multiple class="chosen-select" name="test">
+                        <% let guilds = req.user.guilds; %>
+                        <% guilds.forEach(guild => { %>
+
+                        <% let server_icon_url = 'images/no_user.png'; %>
+                        <% if (guild.icon !== null) { %>
+                        <% server_icon_url = "https://cdn.discordapp.com/icons/" + guild.id + "/" + guild.icon + ".png"; %>
+                        <% } %>
+
+                        <% let selected = ""; %>
+                        <% bday_guilds.forEach(bday_guild => { %>
+                        <% if (bday_guild.guild_id === guild.id) { %>
+                        <% selected = "selected"; %>
+                        <% } %>
+                        <% }); %>
+
+                        <option data-img-src="<%= server_icon_url %>" value="<%= guild.id %>" <%= selected %>>
+                            <%= guild.name %>
+                        </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <br />
+
+                <div class="settings-disclaimer">
+                    <div>The bio will affect your profile on every server.</div>
+                    <br />
+                    <div class="form-group">
+                        <textarea onkeyup="setRequired(this);" id="bio" name="bio" maxlength="30" <%= required %>><%= bio %></textarea>
+                        <label for="bio" class="control-label">Bio</label><i class="bar"></i>
+                    </div>
+                </div>
+
+                <% let disabled = isSupporter ? '' : 'disabled'; %>
+
+                <% if (!isSupporter) { %>
+                <div class="patron-border supporter-tooltip">
+                    <a href="/donate">
+                        <div class="patron-notify">Supporter Only
+                            <span class="supporter-tooltip-wrapper">
+                                <i class="far fa-question-circle"></i>
+                                <span class="supporter-tooltiptext">
+                                    <h3>Become a supporter</h3>
+                                    <img src="/images/become_supporter.png" alt="Supporter">
+                                </span>
+                            </span>
+                        </div>
+                    </a>
+                    <% } %>
+
+
+                    <div class="settings-disclaimer">
+                        The embed colour will affect all messages by Servant with "embed links".
+
+                        <div class="button-container">
+                            <button onclick="submit_color_clear();" id="color-clear" name="color-clear" type="button" class="btn-redirect empty small" <%= disabled %>><span>Reset colour</span></button>
+                        </div>
+
+                        <div class="form-group color">
+                            <input type="color" id="embedcolor" name="embedcolor" value="<%= color %>" <%= disabled %>>
+                            <label for="embedcolor" class="color-label">Embed Colour</label><i class="bar"></i>
+                        </div>
+                    </div>
+
+                    <div class="settings-disclaimer">
+                        The background image will affect your profile on every server.
+                        <div class="button-container">
+                            <button onclick="submit_bg_clear();" id="bg-clear" name="bg-clear" type="button" class="btn-redirect empty small" <%= disabled %>><span>Reset image</span></button>
+                        </div>
+                        <br />
+                        <div class="multiple-select-label">Background images</div>
+
+                        <br />
+
+                        <div class="profile-bg-images">
+                            <label>
+                                <input type="radio" id="bg_1" name="bg" value="1" <%= bg_1 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_1 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_2" name="bg" value="2" <%= bg_2 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_2 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_3" name="bg" value="3" <%= bg_3 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_3 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_4" name="bg" value="4" <%= bg_4 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_4 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_5" name="bg" value="5" <%= bg_5 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_5 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_6" name="bg" value="6" <%= bg_6 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_6 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_7" name="bg" value="7" <%= bg_7 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_7 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_8" name="bg" value="8" <%= bg_8 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_8 %>">
+                            </label>
+
+                            <label>
+                                <input type="radio" id="bg_9" name="bg" value="9" <%= bg_8 %> <%= disabled %> onclick="submit_us();">
+                                <img src="<%= bg_url_9 %>">
+                            </label>
+                        </div>
+                    </div>
+                    <% if (!isSupporter) { %>
+                </div>
+                <% } %>
+            </div>
+        </form>
+    </div>
+</div>

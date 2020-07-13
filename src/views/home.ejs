@@ -1,0 +1,165 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant</title>
+<meta name="title" content="Servant — Your Multifunctional Discord Bot">
+<meta name="description" content="Moderation | Role & Channel Management | Leveling | Giveaways | Polls | Social Interactions | Much more!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/">
+<meta property="og:title" content="Servant — Your Multifunctional Discord Bot">
+<meta property="og:description" content="Moderation | Role & Channel Management | Leveling | Giveaways | Polls | Social Interactions | Much more!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/">
+<meta property="twitter:title" content="Servant — Your Multifunctional Discord Bot">
+<meta property="twitter:description" content="Moderation | Role & Channel Management | Leveling | Giveaways | Polls | Social Interactions | Much more!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-home') -%>
+
+
+<div class="main-wrapper">
+  <div class="wrapper">
+    <div class="featured">
+      <div id="meta"></div>
+      <h1>Your Multifunctional Discord Bot</h1>
+      <span id="subtitle">Author: Tancred#0001</span>
+    </div>
+    <div class="sub-featured">
+      <a href="help">
+        <div class="sub1">
+          <h3><i class="fas fa-book"></i> Help</h3>
+        </div>
+      </a>
+      <a href="faq">
+        <div class="sub2">
+          <h3><i class="fas fa-question-circle"></i> FAQ</h3>
+        </div>
+      </a>
+      <a href="dashboard">
+        <div class="sub3">
+          <% if (req.user) { %>
+          <h3><i class="fas fa-sliders-h"></i> Dashboard</h3>
+          <% } else { %>
+          <h3><i class="fas fa-sliders-h"></i> Dashboard (Login)</h3>
+          <% } %>
+        </div>
+      </a>
+      <a href="leaderboard">
+        <div class="sub4">
+          <% if (req.user) { %>
+          <h3><i class="fas fa-trophy"></i> Leaderboard</h3>
+          <% } else { %>
+          <h3><i class="fas fa-trophy"></i> Leaderboard (Login)</h3>
+          <% } %>
+        </div>
+      </a>
+    </div>
+    <div class="main-content home">
+      <p>
+        Greetings master, I am Servant!
+        <img class="emote-big" src="/images/servantHighFiveL.png" alt="servantHighfiveL">
+        <img class="emote-big" src="/images/servantHighFiveR.png" alt="servantHighfiveR">
+        <br />
+        I will help you to moderate, organize and entertain your Discord server.
+      </p>
+      <p>
+
+        I am fully customizable. Any command, command category or feature can be turned on or off.
+        You can find a detailed documentation in the <a href="/help">Help</a> section.
+        Alternatively, you can join my <a href="http://support.servant.gg/" target="_blank">support server</a> and just ask your questions there.
+      </p>
+      <p>
+        A few highlights of what I can do! 👇
+      </p>
+
+      <div class="highlight-charts">
+        <div class="highlight-chart" id="mod">
+          <div class="title">
+            <i class="fas fa-user-cog"></i> Moderation
+          </div>
+          <div class="body">
+            <div class="body-entry">Custom commands</div>
+            <div class="body-entry">Role management</div>
+            <div class="body-entry">Create your own embed messages</div>
+            <div class="body-entry">Leveling System</div>
+            <div class="body-entry">Livestream management</div>
+            <div class="body-entry">Voice channel organisation</div>
+            <div class="body-entry">Advanced audit log</div>
+            <div class="body-entry">Media-only channels without conversations</div>
+          </div>
+        </div>
+
+        <div class="highlight-chart" id="util">
+          <div class="title">
+            <i class="far fa-lightbulb"></i> Utility
+          </div>
+          <div class="body">
+            <div class="body-entry">Giveaways</div>
+            <div class="body-entry">Polls</div>
+            <div class="body-entry">Remind Me's</div>
+            <div class="body-entry">Event organisation</div>
+          </div>
+        </div>
+
+        <div class="highlight-chart" id="fun">
+          <div class="title">
+            <i class="fas fa-volleyball-ball"></i> Fun, Interaction & Random
+          </div>
+          <div class="body">
+            <div class="body-entry">Flip users</div>
+            <div class="body-entry">Toss a coin (to your servant~)</div>
+            <div class="body-entry">Steal avatars</div>
+            <div class="body-entry">Have a custom profile</div>
+            <div class="body-entry">Earn achievements</div>
+            <div class="body-entry">Share cookies to your friends (or slap 'em ò.ó)</div>
+            <div class="body-entry">Get random pictures of animals or pika pika</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="main-sidebar">
+      <div class="invitechart">
+        <div class="invite-top">
+          <div class="invite-top-inner-wrapper">
+            <div class="avatar">
+              <img src="/images/servant_ava.png" alt="Avatar">
+            </div>
+            <div class="invite-chart-name-verified">
+              <span class="invitechart-name"><strong>Servant#6889</strong></span>
+              <span class="logo-verified inv-chart">
+                <span><strong>✓ BOT</strong></span>
+                <span class="tooltiptext">Verified Bot</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="invite-buttons">
+          <a href="http://invite.servant.gg/" class="btn-redirect empty chart" target="_blank">Invite Bot</a>
+          <a href="http://support.servant.gg/" class="btn-redirect empty chart" target="_blank">Join Support Server</a>
+        </div>
+
+        <div class="invite-bottom">
+          <a href="https://discord.com/" target="_blank"><i class="fab fa-discord"></i> Discord</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') -%>

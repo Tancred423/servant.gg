@@ -1,0 +1,95 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Dashboard: <%= guild.name %> — Utility</title>
+<meta name="title" content="Servant | Dashboard: <%= guild.name %> — Utility">
+<meta name="description" content="Toggle utility commands!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/<%= guild.id %>/utility">
+<meta property="og:title" content="Servant | Dashboard: <%= guild.name %> — Utility">
+<meta property="og:description" content="Toggle utility commands!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/<%= guild.id %>/utility">
+<meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Utility">
+<meta property="twitter:description" content="Toggle utility commands!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+<%- include('partials/nav-highlights/nav-dash') -%>
+
+<% var utility = 'checked'; %>
+<% if (disabled_categories[0]) { %>
+<% utility = '';  %>
+<% } %>
+
+<div class="main-wrapper">
+    <div class="dash-user-wrapper">
+        <div class="dash-featured">
+            <div id="meta"></div>
+            <h1>Dashboard:
+                <% if (guild.icon === null) { %>
+                <img src="/images/no_user.png" alt="Default Server Icon">
+                <% } else { %>
+                <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
+                <% } %>
+                <%= guild.name %>
+            </h1>
+            <div class="path"><a href="/">Home</a> > <a href="/dashboard">Dashboard</a> > <a href="/dashboard/<%= guild.id %>"><%= guild.name %></a> > <a href="/dashboard/<%= guild.id %>/utility">Utility</a></div>
+        </div>
+        <div class="main-content banner">
+            <div class="padding-top padding-bottom padding-left padding-right">
+                <div class="global-switch">
+                    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update category toggle."></div>
+                    <span><i class="far fa-lightbulb"></i> Utility Category</span>
+                    <label class="switch">
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'utility')" <%= utility %>>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="com-sub-featured">
+            <div class="padding-top padding-bottom padding-left padding-right">
+                <h2>Commands</h2>
+                <div id="dismissible-item-com" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update command toggle."></div>
+                <% let checked; %>
+                <% for (let i = 0; i < commands.length; i++) { %>
+                <% checked = 'checked'; %>
+                <% const command = commands[i]; %>
+                <% if (disabled_commands !== undefined) { %>
+                <% for (let j = 0; j < disabled_commands.length; j++) { %>
+                <% const dis_command = disabled_commands[j]; %>
+                <% if (dis_command.command_id === command.id) { %>
+                <% checked = ''; %>
+                <% } %>
+                <% } %>
+                <% } %>
+
+                <div class="command-panel">
+                    <span><%= prefix %><%= command.name %></span>
+                    <label class="switch">
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_commands(this, '<%= command.name %>')" <%= checked %>>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') -%>

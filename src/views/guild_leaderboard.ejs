@@ -81,8 +81,8 @@
 
           <% let user = bot.users.cache.get(exp.user_id); %>
 
-          <% if (user !== undefined) { %>
-
+          <% let botGuild = bot.guilds.cache.get(guild.id); %>
+          <% if (user !== undefined && botGuild.members.cache.get(exp.user_id) !== undefined) { %>
           <div class="block">
             <div class="lead-user-wrapper">
               <div class="delete-user-fake <%= hidden %>"></div>

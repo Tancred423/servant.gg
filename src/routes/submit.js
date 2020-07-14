@@ -1431,9 +1431,11 @@ module.exports = function (bot) {
                     }
 
                     let tc = botGuild.channels.cache.get(tc_id);
-                    tc.send(embed);
-
-                    res.sendStatus(200);
+                    if (tc !== undefined) {
+                        tc.send(embed)
+                            .then(() => res.sendStatus(200))
+                            .catch(() => res.sendStatus(406));
+                    } else res.sendStatus(403);
                 } else res.render('404', { req });
             });
         });
@@ -1569,6 +1571,7 @@ module.exports = function (bot) {
         const public_mode = req.body.public_mode;
         const streamer_roles = req.body.streamer_roles;
         const live_role = req.body.live_role;
+        const livestream_ping_role = req.body.livestream_ping_role;
         const tc = req.body.tc;
 
         get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
@@ -1587,8 +1590,8 @@ module.exports = function (bot) {
                             if (err) { console.log(err); res.sendStatus(500); }
                             else {
                                 // Second insert data
-                                sql = "INSERT INTO guild_livestreams (guild_id,is_public,role_id,tc_id) " +
-                                    "VALUES (" + mysql.escape(guild_id) + "," + mysql.escape(getBoolean(public_mode)) + "," + mysql.escape(live_role) + "," + mysql.escape(tc) + ")";
+                                sql = "INSERT INTO guild_livestreams (guild_id,is_public,role_id,tc_id,ping_role_id) " +
+                                    "VALUES (" + mysql.escape(guild_id) + "," + mysql.escape(getBoolean(public_mode)) + "," + mysql.escape(live_role) + "," + mysql.escape(tc) + "," + mysql.escape(livestream_ping_role) + ")";
 
                                 mysql.query(sql, function (err, result) {
                                     if (err) { console.log(err); res.sendStatus(500); }
@@ -1862,58 +1865,60 @@ module.exports = function (bot) {
 
                             if (emojis != undefined && roles != undefined) {
                                 let tc = botGuild.channels.cache.get(tc_id);
-                                tc.send(embed).then(message => {
-                                    let emojis_split = emojis.split("$€%¥");
-                                    emojis_split.forEach(emoji => {
-                                        if (emoji != "") {
-                                            message.react(emoji).catch(console.error);
-                                        }
-                                    });
+                                if (tc !== undefined) {
+                                    tc.send(embed).then(message => {
+                                        let emojis_split = emojis.split("$€%¥");
+                                        emojis_split.forEach(emoji => {
+                                            if (emoji != "") {
+                                                message.react(emoji).catch(console.error);
+                                            }
+                                        });
 
-                                    // DB
-                                    let sql = "INSERT INTO reaction_role_messages (guild_id,tc_id,msg_id,colorcode,author_name,author_url,author_icon_url,title,title_url,thumbnail_url,description,image_url,footer,footer_icon_url,timestamp) " +
-                                        "VALUES (" + mysql.escape(guild_id) + "," + mysql.escape(tc_id) + "," + mysql.escape(message.id) + "," + mysql.escape(color) + "," + mysql.escape(getBlank(author_name)) + "," + mysql.escape(getBlank(author_link)) + "," + mysql.escape(getBlank(author_icon)) + "," + mysql.escape(getBlank(title)) + "," + mysql.escape(getBlank(title_link)) + "," + mysql.escape(getBlank(thumbnail)) + "," + mysql.escape(getBlank(description)) + "," + mysql.escape(getBlank(image)) + "," + mysql.escape(getBlank(footer_text)) + "," + mysql.escape(getBlank(footer_icon)) + "," + mysql.escape(timestamp_utc ? timestamp_utc.format() : "") + ")";
+                                        // DB
+                                        let sql = "INSERT INTO reaction_role_messages (guild_id,tc_id,msg_id,colorcode,author_name,author_url,author_icon_url,title,title_url,thumbnail_url,description,image_url,footer,footer_icon_url,timestamp) " +
+                                            "VALUES (" + mysql.escape(guild_id) + "," + mysql.escape(tc_id) + "," + mysql.escape(message.id) + "," + mysql.escape(color) + "," + mysql.escape(getBlank(author_name)) + "," + mysql.escape(getBlank(author_link)) + "," + mysql.escape(getBlank(author_icon)) + "," + mysql.escape(getBlank(title)) + "," + mysql.escape(getBlank(title_link)) + "," + mysql.escape(getBlank(thumbnail)) + "," + mysql.escape(getBlank(description)) + "," + mysql.escape(getBlank(image)) + "," + mysql.escape(getBlank(footer_text)) + "," + mysql.escape(getBlank(footer_icon)) + "," + mysql.escape(timestamp_utc ? timestamp_utc.format() : "") + ")";
 
-                                    mysql.query(sql, function (err, result) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let roles_split = roles.split("$€%¥");
-                                            for (let i = 0; i <= roles_split.length; i++) {
-                                                if (i == roles_split.length) {
-                                                    // Loop Ende
-                                                    if (field_titles_split) {
-                                                        for (let i = 0; i <= field_titles_split.length; i++) {
-                                                            if (i == field_titles_split.length) {
-                                                                res.sendStatus(200);
-                                                            } else {
-                                                                sql = "INSERT INTO reaction_role_fields (msg_id,field_no,title,description,inline,guild_id) " +
-                                                                    "VALUES (" + mysql.escape(message.id) + "," + mysql.escape(i + 1) + "," + mysql.escape(field_titles_split[i]) + "," + mysql.escape(field_descriptions_split[i]) + "," + mysql.escape(field_inlines_split[i] == 'inline') + "," + mysql.escape(guild_id) + ");"
+                                        mysql.query(sql, function (err, result) {
+                                            if (err) { console.log(err); res.sendStatus(500); }
+                                            else {
+                                                let roles_split = roles.split("$€%¥");
+                                                for (let i = 0; i <= roles_split.length; i++) {
+                                                    if (i == roles_split.length) {
+                                                        // Loop Ende
+                                                        if (field_titles_split) {
+                                                            for (let i = 0; i <= field_titles_split.length; i++) {
+                                                                if (i == field_titles_split.length) {
+                                                                    res.sendStatus(200);
+                                                                } else {
+                                                                    sql = "INSERT INTO reaction_role_fields (msg_id,field_no,title,description,inline,guild_id,tc_id) " +
+                                                                        "VALUES (" + mysql.escape(message.id) + "," + mysql.escape(i + 1) + "," + mysql.escape(field_titles_split[i]) + "," + mysql.escape(field_descriptions_split[i]) + "," + mysql.escape(field_inlines_split[i] == 'inline') + "," + mysql.escape(guild_id) + "," + mysql.escape(tc_id) + ");"
+
+                                                                    mysql.query(sql, function (err, result) {
+                                                                        if (err) { console.log(err); res.sendStatus(500); }
+                                                                        else { }
+                                                                    });
+                                                                }
+                                                            }
+                                                        } else res.sendStatus(200);
+                                                    } else {
+                                                        const role_entries = roles_split[i];
+                                                        role_entries.split("|").forEach(role_id => {
+                                                            if (role_id) {
+                                                                sql = "INSERT INTO reaction_roles (msg_id,emoji,role_id,guild_id,tc_id) " +
+                                                                    "VALUES (" + mysql.escape(message.id) + "," + mysql.escape(emojis_split[i]) + "," + mysql.escape(role_id) + "," + mysql.escape(guild_id) + "," + mysql.escape(tc_id) + ")";
 
                                                                 mysql.query(sql, function (err, result) {
                                                                     if (err) { console.log(err); res.sendStatus(500); }
                                                                     else { }
                                                                 });
                                                             }
-                                                        }
-                                                    } else res.sendStatus(200);
-                                                } else {
-                                                    const role_entries = roles_split[i];
-                                                    role_entries.split("|").forEach(role_id => {
-                                                        if (role_id) {
-                                                            sql = "INSERT INTO reaction_roles (msg_id,emoji,role_id,guild_id) " +
-                                                                "VALUES (" + mysql.escape(message.id) + "," + mysql.escape(emojis_split[i]) + "," + mysql.escape(role_id) + "," + mysql.escape(guild_id) + ")";
-
-                                                            mysql.query(sql, function (err, result) {
-                                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                                else { }
-                                                            });
-                                                        }
-                                                    });
+                                                        });
+                                                    }
                                                 }
                                             }
-                                        }
-                                    });
-                                });
+                                        });
+                                    }).catch(() => res.sendStatus(406));
+                                } else res.sendStatus(403);
                             } else res.sendStatus(500);
                         }
                     });

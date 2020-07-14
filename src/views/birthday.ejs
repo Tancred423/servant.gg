@@ -113,7 +113,7 @@ if (guild_birthdays.length > 0) {
                                 <% let tc_default_selected = announcement_tc_id == 0 ? 'selected' : ''; %>
                                 <option value="0" <%= tc_default_selected %>>No text channel (Announcement disabled)</option>
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if (channel.type === 'text' || channel.type === 'news') { %>
+                                <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
                                 <% let tc_selected = announcement_tc_id == channel.id ? 'selected' : ''; %>
                                 <option value="<%= channel.id %>" <%= tc_selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
                                 <% } %>
@@ -131,7 +131,7 @@ if (guild_birthdays.length > 0) {
                                 <% let tc_default_selected_list = list_tc_id == 0 ? 'selected' : ''; %>
                                 <option value="0" <%= tc_default_selected_list %>>No text channel (List disabled)</option>
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if (channel.type === 'text' || channel.type === 'news') { %>
+                                <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
                                 <% let tc_selected = list_tc_id == channel.id ? 'selected' : ''; %>
                                 <option value="<%= channel.id %>" <%= tc_selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
                                 <% } %>

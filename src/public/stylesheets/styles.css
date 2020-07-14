@@ -1103,6 +1103,13 @@ a.commands-button-active {
     margin-bottom: 10px;
 }
 
+.note {
+    color: var(--gray-light);
+    font-style: italic;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
 .patreon .body .inner-title,
 .paypal .body .inner-title,
 .serverboost .body .inner-title {
@@ -3385,14 +3392,16 @@ input[type=number] {
     display: none;
 }
 
-/* Best of Image */
+/* Best of Image & Livestream */
 #tc option,
-#tc_list option {
+#tc_list option,
+#livestream_ping_role option {
     color: var(--white);
 }
 
 #tc option:first-child,
-#tc_list option:first-child {
+#tc_list option:first-child,
+#livestream_ping_role option:first-child {
     color: var(--gray);
 }
 
@@ -3434,6 +3443,8 @@ textarea {
     max-width: 600px;
     margin: 40px auto;
 }
+
+
 
 /* Log */
 .log-checkboxes {

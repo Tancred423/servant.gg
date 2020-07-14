@@ -144,7 +144,7 @@
                                 <select id="tc" name="tc" onchange="changeTcSel(this);submit_bestofimage();">
                                     <option value="0" <%= default_selected %>>No text channel</option>
                                     <% botGuild.channels.cache.forEach(channel => { %>
-                                    <% if (channel.type === 'text' || channel.type === 'news') { %>
+                                    <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
                                     <% let selected = '' %>
                                     <% if (channel.id === tc_id) { %>
                                     <% selected = 'selected'; %>

@@ -806,6 +806,7 @@ function submit_livestream() {
             public_mode: $('#livestream-public').is(':checked'),
             streamer_roles: $('#livestream-roles').val().join('|'),
             live_role: $('#livestream-role').val(),
+            livestream_ping_role: $('#livestream_ping_role').val(),
             tc: $('#tc').val()
         },
         success: function () {
@@ -1031,6 +1032,10 @@ $(document).ready(function () {
 
     if ($('#tc_list').val() == 0 || $('#tc_list').val() == null) {
         $('#tc_list').css("color", "#858585");
+    }
+
+    if ($('#livestream_ping_role').val() == 0 || $('#livestream_ping_role').val() == null) {
+        $('#livestream_ping_role').css("color", "#858585");
     }
 });
 
@@ -1286,8 +1291,20 @@ $('#form_embed').submit(function (e) {
         success: function () {
             $('#dismissible-item-success').addClass('dismiss');
         },
-        error: function () {
-            $('#dismissible-item-error').addClass('dismiss');
+        error: function (xhr, ajaxOptions, thrownError) {
+            switch (xhr.status) {
+                case 406:
+                    $('#dismissible-item-error-permission').addClass('dismiss');
+                    break;
+
+                case 403:
+                    $('#dismissible-item-error-tc').addClass('dismiss');
+                    break;
+
+                case 500:
+                    $('#dismissible-item-error').addClass('dismiss');
+                    break;
+            }
         }
     });
 });
@@ -1758,6 +1775,8 @@ function open_modal_create() {
             '                                                                                                                                                                                                           ' +
             '        <form action="/submit/reactionrole_create" method="POST" id="form_reactionroles_create">                                                                                                                  ' +
             '            <div id="dismissible-item-error-create" data-component="dismissible-item" data-type="error" data-value="Something went wrong."></div>                                                          ' +
+            '            <div id="dismissible-item-error-permission" data-component="dismissible-item" data-type="error" data-value="I cannot write in that text channel."></div>                                                        ' +
+            '            <div id="dismissible-item-error-tc" data-component="dismissible-item" data-type="error" data-value="I cannot find that text channel."></div>' +
             '                                                                                                                                                                                                           ' +
             '            <div class="embed-warning">                                                                                                                                                                    ' +
             '                If you refresh or quit the page, your progress will be lost!                                                                                                                               ' +
@@ -1772,10 +1791,11 @@ function open_modal_create() {
             '                            <select id="tc-create" name="tc" onchange="changeTcSel(this);" required>                                                                                                       ' +
             '                                <option value="" selected disabled>Please select a text channel</option>                                                                                                   ';
 
-        botChannels.forEach(channel => {
-            if (channel.type === 'text' || channel.type === 'news') {
+
+        var_channels.forEach(channel => {
+            if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) {
                 html +=
-                    '                                <option value="' + channel.id + '">#' + channel.name + (channel.parent ? '(' + channel.parent.name + ')' : '') + '</option>                                                                               ';
+                    '                                <option value="' + channel.id + '">#' + channel.name + (channel.parent_name ? ' (' + channel.parent_name + ')' : '') + '</option>                                                                               ';
             }
         });
 
@@ -1968,8 +1988,20 @@ function open_modal_create() {
                 success: function () {
                     location.reload();
                 },
-                error: function () {
-                    $('#dismissible-item-error-create').addClass('dismiss');
+                error: function (xhr, ajaxOptions, thrownError) {
+                    switch (xhr.status) {
+                        case 406:
+                            $('#dismissible-item-error-permission').addClass('dismiss');
+                            break;
+
+                        case 403:
+                            $('#dismissible-item-error-tc').addClass('dismiss');
+                            break;
+
+                        case 500:
+                            $('#dismissible-item-error-create').addClass('dismiss');
+                            break;
+                    }
                 }
             });
         });
@@ -2213,6 +2245,8 @@ function open_modal_edit(button) {
                     '                                                                                                                                                                                                       ' +
                     '        <form action="/submit/reactionrole_edit" method="POST" id="form_reactionroles_edit">                                                                                                                ' +
                     '            <div id="dismissible-item-error-edit" data-component="dismissible-item" data-type="error" data-value="Something went wrong."></div>                                                        ' +
+                    '            <div id="dismissible-item-error-permission" data-component="dismissible-item" data-type="error" data-value="I cannot write in that text channel."></div>                                                        ' +
+                    '            <div id="dismissible-item-error-tc" data-component="dismissible-item" data-type="error" data-value="I cannot find that text channel."></div>' +
                     '                                                                                                                                                                                                       ' +
                     '            <div class="embed-warning">                                                                                                                                                                ' +
                     '                If you refresh or quit the page, your progress will be lost!                                                                                                                           ' +
@@ -2229,12 +2263,10 @@ function open_modal_edit(button) {
                     '                                <option value="" disabled>Please select a text channel</option>                                                                                   ';
 
                 // Text channel options
-                botChannels.forEach(channel => {
-
-                    if (channel.type === "text" || channel.type === 'news') {
-                        let tc_selected = channel.id == tc_id ? "selected" : "";
+                var_channels.forEach(channel => {
+                    if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) {
                         html +=
-                            '                                <option ' + tc_selected + ' value="' + channel.id + '">#' + channel.name + (channel.parent != undefined ? '(' + channel.parent.name + ')' : '') + '</option>                                                        ';
+                            '                                <option value="' + channel.id + '">#' + channel.name + (channel.parent_name ? ' (' + channel.parent_name + ')' : '') + '</option>                                                                               ';
                     }
                 });
 
@@ -2714,8 +2746,20 @@ function open_modal_edit(button) {
                         success: function () {
                             location.reload();
                         },
-                        error: function () {
-                            $('#dismissible-item-error-edit').addClass('dismiss');
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            switch (xhr.status) {
+                                case 406:
+                                    $('#dismissible-item-error-permission').addClass('dismiss');
+                                    break;
+
+                                case 403:
+                                    $('#dismissible-item-error-tc').addClass('dismiss');
+                                    break;
+
+                                case 500:
+                                    $('#dismissible-item-error-edit').addClass('dismiss');
+                                    break;
+                            }
                         }
                     });
                 });

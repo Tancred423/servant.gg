@@ -50,6 +50,8 @@
         <form action="/submit/embed" method="POST" id="form_embed">
           <div id="dismissible-item-success" data-component="dismissible-item" data-type="success" data-value="Embed was sent successfully."></div>
           <div id="dismissible-item-error" data-component="dismissible-item" data-type="error" data-value="Something went wrong."></div>
+          <div id="dismissible-item-error-permission" data-component="dismissible-item" data-type="error" data-value="I cannot write in that text channel."></div>
+          <div id="dismissible-item-error-tc" data-component="dismissible-item" data-type="error" data-value="I cannot find that text channel."></div>
 
           <div class="embed-warning">
             If you refresh or quit the page, your progress will be lost!
@@ -64,7 +66,7 @@
                   <select id="tc" name="tc" onchange="changeTcSel(this);" required>
                     <option value="" selected disabled>Please select a text channel</option>
                     <% botGuild.channels.cache.forEach(channel => { %>
-                    <% if (channel.type === 'text' || channel.type === 'news') { %>
+                    <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
                     <option value="<%= channel.id %>">#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
                     <% } %>
                     <% }); %>

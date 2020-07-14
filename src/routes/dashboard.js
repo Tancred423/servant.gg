@@ -818,9 +818,21 @@ module.exports = function (bot) {
                                                                                     });
                                                                                 }
 
-                                                                                let rrAmount = rr_roles_emojis.length;
+                                                                                let rrAmount = rr_msgs.length;
                                                                                 let botGuild = bot.guilds.cache.get(guild.id);
-                                                                                res.render('reactionrole', { req, guild, bot, botGuild, color_code, isSupporter, disabled_plugins, rr_msgs, rr_roles_emojis, rr_fields, timestamp_tz_formats, rrAmount });
+
+                                                                                let channels = [];
+                                                                                botGuild.channels.cache.forEach(channel => {
+                                                                                    channels.push({
+                                                                                        id: channel.id,
+                                                                                        name: channel.name,
+                                                                                        type: channel.type,
+                                                                                        viewable: channel.viewable,
+                                                                                        parent_name: channel.parent ? channel.parent.name : ''
+                                                                                    });
+                                                                                });
+
+                                                                                res.render('reactionrole', { req, guild, bot, botGuild, color_code, isSupporter, disabled_plugins, rr_msgs, rr_roles_emojis, rr_fields, timestamp_tz_formats, rrAmount, channels });
                                                                             }
                                                                         });
                                                                     }

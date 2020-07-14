@@ -112,7 +112,7 @@
 
                             <select onchange="submit_mediaonlychannel();" id="moc_channels" name="moc_channels" data-placeholder="Select text channels..." multiple class="chosen-select">
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if (channel.type === 'text' || channel.type === 'news') { %>
+                                <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
 
                                 <% let selected = ""; %>
                                 <% mediaonlychannels.forEach(moc => { %>

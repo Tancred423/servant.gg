@@ -14,6 +14,50 @@ module.exports = function (bot) {
         }
     }
 
+    function getAuthorization(req, id, mysql, bot, callback) {
+        let botUser = bot.users.cache.get(req.user.discordId);
+        let botGuild = bot.guilds.cache.get(id);
+        let is_authorized = false;
+
+        if (botGuild !== undefined) {
+            // Owner?
+            let isOwner = botGuild.ownerID == req.user.discordId;
+
+            // Admin?
+            let isAdmin = false;
+            let member = undefined;
+
+            if (botGuild !== undefined && botUser !== undefined) {
+                member = botGuild.member(botUser);
+                isAdmin = member.hasPermission("ADMINISTRATOR");
+            }
+
+            // Servant-Moderator?
+            let isServantMod = false;
+
+            let sql = "SELECT * " +
+                "FROM guild_mod_roles " +
+                "WHERE guild_id=" + mysql.escape(id);
+
+            mysql.query(sql, function (err, modRoleIdEntries) {
+                if (err) {
+                    console.log(err);
+                    callback(false);
+                } else {
+                    modRoleIdEntries.forEach(modRoleIdEntry => {
+                        if (member.roles.cache.get(modRoleIdEntry.role_id) !== undefined)
+                            isServantMod = true;
+                    });
+
+                    // Authorized?
+                    if (isOwner || isAdmin || isServantMod) is_authorized = true;
+
+                    return callback(is_authorized);
+                }
+            });
+        } else callback(is_authorized);
+    }
+
     router.get('/', isAuthorized, (req, res) => {
         var lvlDisabledGuilds = [];
         var allGuilds = [];
@@ -62,7 +106,6 @@ module.exports = function (bot) {
         var pathArray = req.originalUrl.split('/');
         var id = pathArray[pathArray.length - 1].split("?")[0];
 
-        var rendered = false;
         var guilds = req.user.guilds;
         let guildFound = false;
 
@@ -98,44 +141,8 @@ module.exports = function (bot) {
                                         mysql.query(sql, function (err, exps) {
                                             if (err) { console.log(err); res.render('404', { req }); }
                                             else {
-
-                                                // Check if author is mod
-                                                let isAuthorized = true;
-
-                                                // Admin?
-                                                let botUser = bot.users.cache.get(req.user.discordId);
-                                                var botGuild = bot.guilds.cache.get(guild.id);
-
-                                                let isAdmin = false;
-                                                if (botGuild !== undefined && botUser !== undefined) {
-                                                    let member = botGuild.member(botUser);
-                                                    if (member === null) {
-                                                        res.render('404', { req });
-                                                        return;
-                                                    } else isAdmin = member.hasPermission("ADMINISTRATOR");
-                                                }
-
-                                                // Servant-Moderator?
-                                                let sql = "SELECT * " +
-                                                    "FROM guild_mods " +
-                                                    "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                                    "AND user_id=" + mysql.escape(req.user.discordId);
-                                                let servantModGuilds = [];
-
-                                                mysql.query(sql, function (err, result_mods) {
-                                                    if (err) {
-                                                        isAuthorized = false;
-                                                    } else {
-                                                        for (let i = 0; i < result_mods.length; i++) {
-                                                            servantModGuilds.push(result_mods[i].guild_id);
-                                                        }
-                                                    }
-
-                                                    let isServantMod = servantModGuilds.indexOf(guild.id) > -1;
-
-                                                    if (botGuild.ownerID !== req.user.discordId && !isAdmin && !isServantMod) isAuthorized = false;
-
-                                                    rendered = true;
+                                                getAuthorization(req, id, mysql, bot, function (isAuthorized) {
+                                                    let botGuild = bot.guilds.cache.get(id);
                                                     res.render('guild_leaderboard', { req, guild, exps, botGuild, isAuthorized, bot });
                                                 });
                                             }

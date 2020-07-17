@@ -102,7 +102,6 @@ module.exports = function (bot) {
         callback(isSupporter);
     }
 
-
     async function get_owner_guilds(req, bot, mysql) {
         let guilds = req.user.guilds;
         let ownerGuilds = [];

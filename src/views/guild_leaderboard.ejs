@@ -32,13 +32,17 @@
 <%- include('partials/nav-highlights/nav-lead') -%>
 <%- include('partials/functions') -%>
 
+<script>
+  var varIsAuthorized = <%- JSON.stringify(isAuthorized) %>;
+</script>
+
 <div class="main-wrapper">
   <div class="lead-wrapper">
     <div class="lead-featured">
       <div id="meta"></div>
       <h1>Leaderboard:
         <% if (guild.icon === null) { %>
-        <img src="images/no_user.png" alt="Default Server Icon">
+        <img src="/images/no_user.png" alt="Default Server Icon">
         <% } else { %>
         <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="Server Icon">
         <% } %>
@@ -62,6 +66,7 @@
       <div class="padding-top padding-bottom padding-left padding-right">
         <div class="leaderboard-wrapper">
           <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't delete member(s)."></div>
+          <div id="dismissible-item-forbidden" data-component="dismissible-item" data-type="error" data-value="You're not allowed to reset members!"></div>
           <div class="danger-area <%= hidden %>" id="danger-area">
             <button class="btn-redirect empty btn-danger" id="prune-members" name="<%= guild.id %>" onclick="submit_prune_members(this);">Reset members who left this server</button>
             <button class="btn-redirect btn-danger" id="reset-members" name="<%= guild.id %>" onclick="submit_reset_members(this);">Reset ALL members</button>
@@ -82,7 +87,7 @@
           <% let user = bot.users.cache.get(exp.user_id); %>
 
           <% let botGuild = bot.guilds.cache.get(guild.id); %>
-          <% if (user !== undefined && botGuild.members.cache.get(exp.user_id) !== undefined) { %>
+          <% if (user !== undefined) { %>
           <div class="block">
             <div class="lead-user-wrapper">
               <div class="delete-user-fake <%= hidden %>"></div>

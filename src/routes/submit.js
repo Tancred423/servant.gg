@@ -303,85 +303,88 @@ module.exports = function (bot) {
 
     // User Settings
     router.post('/user', (req, res) => {
-        const user_id = req.user.discordId;
-        let prefix = req.body.prefix;
-        const language = req.body.language;
-        const bio = req.body.bio;
-        let birthday = req.body.birthday;
-        if (!birthday) birthday = "0000-00-00";
-        const bday_guilds = req.body.bday_guilds;
-        let bday_guilds_split = bday_guilds === '' ? '' : bday_guilds.split('|');
-        let color = req.body.color;
-        if (!color) color = '#7289da';
+        if (req.user === undefined) res.sendStatus(500);
+        else {
+            const user_id = req.user.discordId;
+            let prefix = req.body.prefix;
+            const language = req.body.language;
+            const bio = req.body.bio;
+            let birthday = req.body.birthday;
+            if (!birthday) birthday = "0000-00-00";
+            const bday_guilds = req.body.bday_guilds;
+            let bday_guilds_split = bday_guilds === '' ? '' : bday_guilds.split('|');
+            let color = req.body.color;
+            if (!color) color = '#7289da';
 
-        let bg_1 = req.body.bg_1;
-        let bg_2 = req.body.bg_2;
-        let bg_3 = req.body.bg_3;
-        let bg_4 = req.body.bg_4;
-        let bg_5 = req.body.bg_5;
-        let bg_6 = req.body.bg_6;
-        let bg_7 = req.body.bg_7;
-        let bg_8 = req.body.bg_8;
-        let bg_9 = req.body.bg_9;
+            let bg_1 = req.body.bg_1;
+            let bg_2 = req.body.bg_2;
+            let bg_3 = req.body.bg_3;
+            let bg_4 = req.body.bg_4;
+            let bg_5 = req.body.bg_5;
+            let bg_6 = req.body.bg_6;
+            let bg_7 = req.body.bg_7;
+            let bg_8 = req.body.bg_8;
+            let bg_9 = req.body.bg_9;
 
-        let profile_bg_id;
-        if (bg_1 == 'true') profile_bg_id = 1;
-        else if (bg_2 == 'true') profile_bg_id = 2;
-        else if (bg_3 == 'true') profile_bg_id = 3;
-        else if (bg_4 == 'true') profile_bg_id = 4;
-        else if (bg_5 == 'true') profile_bg_id = 5;
-        else if (bg_6 == 'true') profile_bg_id = 6;
-        else if (bg_7 == 'true') profile_bg_id = 7;
-        else if (bg_8 == 'true') profile_bg_id = 8;
-        else if (bg_9 == 'true') profile_bg_id = 9;
-        else profile_bg_id = 1;
+            let profile_bg_id;
+            if (bg_1 == 'true') profile_bg_id = 1;
+            else if (bg_2 == 'true') profile_bg_id = 2;
+            else if (bg_3 == 'true') profile_bg_id = 3;
+            else if (bg_4 == 'true') profile_bg_id = 4;
+            else if (bg_5 == 'true') profile_bg_id = 5;
+            else if (bg_6 == 'true') profile_bg_id = 6;
+            else if (bg_7 == 'true') profile_bg_id = 7;
+            else if (bg_8 == 'true') profile_bg_id = 8;
+            else if (bg_9 == 'true') profile_bg_id = 9;
+            else profile_bg_id = 1;
 
-        isSupporter(req, bot, function (isSupporter) {
-            let sql = "SELECT user_id" + " " +
-                "FROM users" + " " +
-                "WHERE user_id=" + mysql.escape(user_id);
+            isSupporter(req, bot, function (isSupporter) {
+                let sql = "SELECT user_id" + " " +
+                    "FROM users" + " " +
+                    "WHERE user_id=" + mysql.escape(user_id);
 
-            mysql.query(sql, function (err, result) {
-                if (err) { console.log(err); res.sendStatus(500); }
-                else {
-                    if (result.length > 0) {
-                        if (!isSupporter && color != '#7289da') {
-                            color = '#7289da';
+                mysql.query(sql, function (err, result) {
+                    if (err) { console.log(err); res.sendStatus(500); }
+                    else {
+                        if (result.length > 0) {
+                            if (!isSupporter && color != '#7289da') {
+                                color = '#7289da';
+                            }
+
+                            if (!isSupporter && profile_bg_id != 1) {
+                                profile_bg_id = 1;
+                            }
+
+                            // Update
+                            let sql = "UPDATE users " +
+                                "SET prefix=" + mysql.escape(prefix) + ", " +
+                                "language_code=" + mysql.escape(language) + ", " +
+                                "color_code=" + mysql.escape(color) + ", " +
+                                "bio=" + mysql.escape(bio) + ", " +
+                                "birthday=" + mysql.escape(birthday) + ", " +
+                                "profile_bg_id=" + mysql.escape(profile_bg_id) + " " +
+                                "WHERE user_id=" + mysql.escape(user_id);
+
+                            mysql.query(sql, function (err, result) {
+                                if (err) { console.log(err); res.sendStatus(500); }
+                                else setBdayGuilds(res, bday_guilds_split, user_id);
+                            });
+                        } else {
+                            if (!isSupporter && (color != '#7289da')) color = '#7289da';
+
+                            // Insert
+                            let sql = "INSERT INTO users (user_id,prefix,language_code,color_code,bio,birthday,profile_bg_id) " +
+                                "VALUES (" + mysql.escape(user_id) + "," + mysql.escape(prefix) + "," + mysql.escape(language) + "," + mysql.escape(color) + "," + mysql.escape(bio) + "," + mysql.escape(birthday) + "," + mysql.escape(profile_bg_id) + ")";
+
+                            mysql.query(sql, function (err, result) {
+                                if (err) { console.log(err); res.sendStatus(500); }
+                                else setBdayGuilds(res, bday_guilds_split, user_id);
+                            });
                         }
-
-                        if (!isSupporter && profile_bg_id != 1) {
-                            profile_bg_id = 1;
-                        }
-
-                        // Update
-                        let sql = "UPDATE users " +
-                            "SET prefix=" + mysql.escape(prefix) + ", " +
-                            "language_code=" + mysql.escape(language) + ", " +
-                            "color_code=" + mysql.escape(color) + ", " +
-                            "bio=" + mysql.escape(bio) + ", " +
-                            "birthday=" + mysql.escape(birthday) + ", " +
-                            "profile_bg_id=" + mysql.escape(profile_bg_id) + " " +
-                            "WHERE user_id=" + mysql.escape(user_id);
-
-                        mysql.query(sql, function (err, result) {
-                            if (err) { console.log(err); res.sendStatus(500); }
-                            else setBdayGuilds(res, bday_guilds_split, user_id);
-                        });
-                    } else {
-                        if (!isSupporter && (color != '#7289da')) color = '#7289da';
-
-                        // Insert
-                        let sql = "INSERT INTO users (user_id,prefix,language_code,color_code,bio,birthday,profile_bg_id) " +
-                            "VALUES (" + mysql.escape(user_id) + "," + mysql.escape(prefix) + "," + mysql.escape(language) + "," + mysql.escape(color) + "," + mysql.escape(bio) + "," + mysql.escape(birthday) + "," + mysql.escape(profile_bg_id) + ")";
-
-                        mysql.query(sql, function (err, result) {
-                            if (err) { console.log(err); res.sendStatus(500); }
-                            else setBdayGuilds(res, bday_guilds_split, user_id);
-                        });
                     }
-                }
+                });
             });
-        });
+        }
     });
 
     function setBdayGuilds(res, bday_guilds_split, user_id) {
@@ -2403,7 +2406,7 @@ module.exports = function (bot) {
                     if (err) { console.log(err); res.sendStatus(500); }
                     else res.sendStatus(200);
                 });
-            } else res.render('404', { req });
+            } else res.sendStatus(403);
         });
     });
 
@@ -2411,13 +2414,15 @@ module.exports = function (bot) {
         const guild_id = req.body.guild_id;
 
         get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
-            let sql = "DELETE FROM user_exp " +
-                "WHERE guild_id=" + mysql.escape(guild_id);
+            if (is_authorized) {
+                let sql = "DELETE FROM user_exp " +
+                    "WHERE guild_id=" + mysql.escape(guild_id);
 
-            mysql.query(sql, function (err, result) {
-                if (err) { console.log(err); res.sendStatus(500); }
-                else res.sendStatus(200);
-            });
+                mysql.query(sql, function (err, result) {
+                    if (err) { console.log(err); res.sendStatus(500); }
+                    else res.sendStatus(200);
+                });
+            } else res.sendStatus(403);
         });
     });
 
@@ -2426,33 +2431,39 @@ module.exports = function (bot) {
         let botGuild = bot.guilds.cache.get(guild_id);
 
         get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
-            let sql = "SELECT * " +
-                "FROM user_exp " +
-                "WHERE guild_id=" + mysql.escape(guild_id);
+            if (is_authorized) {
+                let sql = "SELECT * " +
+                    "FROM user_exp " +
+                    "WHERE guild_id=" + mysql.escape(guild_id);
 
-            mysql.query(sql, function (err, user_exps) {
-                if (err) { console.log(err); res.sendStatus(500); }
-                else {
-                    for (let i = 0; i < user_exps.length; i++) {
-                        const user_exp = user_exps[i];
-                        const user_id = user_exp.user_id;
-
-                        let member = botGuild.members.cache.get(user_id);
-                        if (member === undefined) {
-                            let sql = "DELETE FROM user_exp " +
-                                "WHERE user_id=" + mysql.escape(user_id) + " " +
-                                "AND guild_id=" + mysql.escape(guild_id);
-
-                            mysql.query(sql, function (err, result) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else res.sendStatus(200);
-                            });
-                        }
-                    }
-                }
-            });
+                mysql.query(sql, function (err, user_exps) {
+                    if (err) { console.log(err); res.sendStatus(500); }
+                    else
+                        pruneMembers(mysql, user_exps, botGuild)
+                            .then(res.sendStatus(200))
+                            .catch(() => res.sendStatus(500));
+                });
+            } else res.sendStatus(403);
         });
     });
+
+    async function pruneMembers(mysql, user_exps, botGuild) {
+        for (const i in user_exps) {
+            const user_exp = user_exps[i];
+            const user_id = user_exp.user_id;
+
+            let member = botGuild.members.cache.get(user_id);
+            if (member === undefined) {
+                let sql = "DELETE FROM user_exp " +
+                    "WHERE user_id=" + mysql.escape(user_id) + " " +
+                    "AND guild_id=" + mysql.escape(botGuild.id);
+
+                await mysql.query(sql);
+            }
+        }
+
+        return Promise.resolve();
+    }
 
     return router;
 };

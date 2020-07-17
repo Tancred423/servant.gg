@@ -947,11 +947,14 @@ $(function () {
 });
 
 $(document).ready(function () {
-    var toggle = getCookie("danger-mode") === "true" ? true : false;
-    $('#danger_mode').prop("checked", toggle);
-    $('.delete-user-fake').toggle(toggle);
-    $('.delete-user').toggle(toggle);
-    $('#danger-area').toggle(toggle);
+    if (typeof varIsAuthorized !== 'undefined') {
+        var toggle = getCookie("danger-mode") === "true" ? true : false;
+        if (!varIsAuthorized) toggle = false;
+        $('#danger_mode').prop("checked", toggle);
+        $('.delete-user-fake').toggle(toggle);
+        $('.delete-user').toggle(toggle);
+        $('#danger-area').toggle(toggle);
+    }
 });
 
 function submit_reset_member(button) {
@@ -972,8 +975,11 @@ function submit_reset_member(button) {
             success: function () {
                 location.reload();
             },
-            error: function () {
-                $('#dismissible-item').addClass('dismiss');
+            error: function (xhr, status, text) {
+                if (xhr.status === 403)
+                    $('#dismissible-item-forbidden').addClass('dismiss');
+                else
+                    $('#dismissible-item').addClass('dismiss');
             }
         });
     } else return;
@@ -994,8 +1000,11 @@ function submit_reset_members(button) {
             success: function () {
                 location.reload();
             },
-            error: function () {
-                $('#dismissible-item').addClass('dismiss');
+            error: function (xhr, status, text) {
+                if (xhr.status === 403)
+                    $('#dismissible-item-forbidden').addClass('dismiss');
+                else
+                    $('#dismissible-item').addClass('dismiss');
             }
         });
     } else return;
@@ -1016,8 +1025,11 @@ function submit_prune_members(button) {
             success: function () {
                 location.reload();
             },
-            error: function () {
-                $('#dismissible-item').addClass('dismiss');
+            error: function (xhr, status, text) {
+                if (xhr.status === 403)
+                    $('#dismissible-item-forbidden').addClass('dismiss');
+                else
+                    $('#dismissible-item').addClass('dismiss');
             }
         });
     } else return;

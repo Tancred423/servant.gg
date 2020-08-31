@@ -916,7 +916,8 @@ module.exports = function (bot) {
                                 else {
                                     sql = "SELECT * " +
                                         "FROM const_commands " +
-                                        "WHERE category_id=" + mysql.escape(3);
+                                        "WHERE category_id=" + mysql.escape(3) + " " +
+                                        "ORDER BY name ASC";
 
                                     mysql.query(sql, function (err, commands) {
                                         if (err) { console.log(err); res.sendStatus(500); }
@@ -994,7 +995,8 @@ module.exports = function (bot) {
                                     else {
                                         sql = "SELECT * " +
                                             "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(4);
+                                            "WHERE category_id=" + mysql.escape(4) + " " +
+                                            "ORDER BY name ASC";
 
                                         mysql.query(sql, function (err, commands) {
                                             if (err) { console.log(err); res.sendStatus(500); }
@@ -1041,7 +1043,8 @@ module.exports = function (bot) {
                                     else {
                                         sql = "SELECT * " +
                                             "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(5);
+                                            "WHERE category_id=" + mysql.escape(5) + " " +
+                                            "ORDER BY name ASC";
 
                                         mysql.query(sql, function (err, commands) {
                                             if (err) { console.log(err); res.sendStatus(500); }
@@ -1088,7 +1091,8 @@ module.exports = function (bot) {
                                     else {
                                         sql = "SELECT * " +
                                             "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(6);
+                                            "WHERE category_id=" + mysql.escape(6) + " " +
+                                            "ORDER BY name ASC";
 
                                         mysql.query(sql, function (err, commands) {
                                             if (err) { console.log(err); res.sendStatus(500); }
@@ -1135,7 +1139,8 @@ module.exports = function (bot) {
                                     else {
                                         sql = "SELECT * " +
                                             "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(7);
+                                            "WHERE category_id=" + mysql.escape(7) + " " +
+                                            "ORDER BY name ASC";
 
                                         mysql.query(sql, function (err, commands) {
                                             if (err) { console.log(err); res.sendStatus(500); }

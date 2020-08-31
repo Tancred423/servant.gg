@@ -118,7 +118,7 @@ module.exports = function (bot) {
 
         get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
             if (is_authorized) {
-                // Check if user exists in db
+                // Check if guild exists in db
                 let sql = "SELECT guild_id" + " " +
                     "FROM guilds" + " " +
                     "WHERE guild_id=" + mysql.escape(guild_id);
@@ -202,8 +202,8 @@ module.exports = function (bot) {
         let stmt = "SELECT * " +
             "FROM guild_disabled_features AS d " +
             "INNER JOIN const_features AS f " +
-            "ON d.feature_id=f.id "
-        "WHERE d.guild_id=" + mysql.escape(guild_id);
+            "ON d.feature_id=f.id " +
+            "WHERE d.guild_id=" + mysql.escape(guild_id);
 
         mysql.query(stmt, function (err, disabled_features) {
             if (err) {

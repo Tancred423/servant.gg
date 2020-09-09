@@ -3163,18 +3163,28 @@ function open_modal_create_cc() {
             '            <div class="container small dark">                                                                                                                                                             ' +
             '                <div class="padding-top padding-bottom padding-left padding-right">                                                                                                                        ' +
             '                    <div class="settings-disclaimer embed tc">                                                                                                                                             ' +
-            '                        <div>This is how the command will be used.</div>                                                                                                                                 ' +
+            '                        <div>This is how the command will be used.</div>                                                                                                                                   ' +
             '                        <br />                                                                                                                                                                             ' +
             '                        <div class="invoke-wrapper">                                                                                                                                                       ' +
             '                           <div class="prefix">' + var_prefix + '</div>                                                                                                                                    ' +
             '                           <div class="form-group embed invoke-div">                                                                                                                                       ' +
-            '                               <input onkeyup="setRequired(this);" type="text" id="invoke" name="invoke" maxlength="100" required>                                                                                  ' +
+            '                               <input type="text" id="invoke" name="invoke" maxlength="100" title="No spaces allowed!" pattern="[^\' \']+" required>                             ' +
             '                               <label for="invoke" class="control-label">Command Name (Invoke)</label><i class="bar"></i>                                                                                  ' +
             '                           </div>                                                                                                                                                                          ' +
             '                        </div>                                                                                                                                                                             ' +
             '                    </div>                                                                                                                                                                                 ' +
             '                </div>                                                                                                                                                                                     ' +
-            '            </div>                                                                                                                                                                                         ';
+            '            </div>                                                                                                                                                                                         ' +
+            '           <br/>' +
+            '           <div class="container small dark">' +
+            '               <div class="padding-top padding-bottom padding-left padding-right">' +
+            '                   <div class="settings-disclaimer embed">' +
+            '                       <div>Command aliases. Seperate multiple aliases by comma. (Max. 10)</div>' +
+            '                       <div class="tags-input" data-name="tags-input">' +
+            '                       </div>' +
+            '                   </div>' +
+            '               </div>' +
+            '           </div>';
 
         // Normal or embed message?
         html +=
@@ -3219,9 +3229,7 @@ function open_modal_create_cc() {
         html +=
             '                    <div id="color-picker-wrapper-create">                                                                                                                                                 ';
 
-        console.log(var_color_code)
         let color = var_color_code.length > 0 ? var_color_code[0].color_code : '#7289da';
-        console.log(color)
 
         html +=
             '                        <input name="color-picker" type="color" value="' + color + '" id="color-picker-create" ' + disabled + '>                                                                             ' +
@@ -3308,6 +3316,7 @@ function open_modal_create_cc() {
 
         $('#modals-wrapper').append(html);
 
+        // Dismissables
         refreshDismissibles(window);
 
         // Add script for color picker
@@ -3318,8 +3327,113 @@ function open_modal_create_cc() {
         }
         color_picker_wrapper.style.backgroundColor = color_picker.value;
 
+        // Aliases
+        [].forEach.call(document.getElementsByClassName('tags-input'), function (el) {
+            let hiddenInput = document.createElement('input');
+            let mainInput = document.createElement('input');
+            let tags = [];
+
+            hiddenInput.setAttribute('type', 'hidden');
+            hiddenInput.setAttribute('name', el.getAttribute('data-name'));
+
+            mainInput.setAttribute('type', 'text');
+            mainInput.classList.add('main-input');
+            mainInput.addEventListener('input', function () {
+                let enteredTags = mainInput.value.split(',');
+                if (enteredTags.length > 1) {
+                    enteredTags.forEach(function (t) {
+                        let filteredTag = filterTag(t, var_prefix);
+                        if (filteredTag.length > 0)
+                            addTag(filteredTag);
+                    });
+                    mainInput.value = '';
+                }
+            });
+            mainInput.addEventListener('blur', function () {
+                if (!mainInput.value.endsWith(',')) {
+                    mainInput.value = mainInput.value + ",";
+                    let enteredTags = mainInput.value.split(',');
+                    if (enteredTags.length > 1) {
+                        enteredTags.forEach(function (t) {
+                            let filteredTag = filterTag(t, var_prefix);
+                            if (filteredTag.length > 0)
+                                addTag(filteredTag);
+                        });
+                        mainInput.value = '';
+                    }
+                }
+            });
+
+            mainInput.addEventListener('keydown', function (e) {
+                let keyCode = e.which || e.keyCode;
+                if (keyCode === 8 && mainInput.value.length === 0 && tags.length > 0) {
+                    removeTag(tags.length - 1);
+                }
+            });
+
+            el.appendChild(mainInput);
+            el.appendChild(hiddenInput);
+
+            function addTag(text) {
+                let tag = {
+                    text: text,
+                    element: document.createElement('span'),
+                };
+
+                tag.element.classList.add('tag');
+                tag.element.textContent = tag.text;
+
+                let closeBtn = document.createElement('span');
+                closeBtn.classList.add('closetag');
+                closeBtn.addEventListener('click', function () {
+                    removeTag(tags.indexOf(tag));
+                });
+                tag.element.prepend(closeBtn);
+
+                tags.push(tag);
+
+                el.insertBefore(tag.element, mainInput);
+
+                refreshTags();
+            }
+
+            function removeTag(index) {
+                let tag = tags[index];
+                tags.splice(index, 1);
+                el.removeChild(tag.element);
+                refreshTags();
+            }
+
+            function refreshTags() {
+                let tagsList = [];
+                tags.forEach(function (t) {
+                    tagsList.push(t.text);
+                });
+                hiddenInput.value = tagsList.join(',');
+            }
+
+            function filterTag(tag, prefix) {
+                let filteredTag = tag.replace(/\s/g, '');
+                return filteredTag ? prefix + filteredTag : '';
+            }
+        });
+
+        // Submit
         $('#form_customcommands').on("submit", function (e) {
             e.preventDefault();
+
+            let submitTags = [];
+            let iterator = 0;
+            $('.tag').each(function (i) {
+                if (iterator < 10) {
+                    let alias = $(this).text().replace(var_prefix, '');
+                    if (alias != $('#invoke').val()) {
+                        submitTags.push(alias);
+                        iterator++;
+                    }
+                }
+            });
+            let uniqueTags = Array.from(new Set(submitTags));
 
             if ($('#tab_normal').hasClass('active_cc')) {
                 // Normal message
@@ -3331,6 +3445,7 @@ function open_modal_create_cc() {
                     data: {
                         guild_id: $('#guild_id-create').val(),
                         invoke: $('#invoke').val(),
+                        aliases: JSON.stringify(uniqueTags),
                         message: $('#normal_msg_desc').val()
                     },
                     success: function () {
@@ -3372,6 +3487,7 @@ function open_modal_create_cc() {
                     data: {
                         guild_id: $('#guild_id-create').val(),
                         invoke: $('#invoke').val(),
+                        aliases: JSON.stringify(uniqueTags),
 
                         color: $('#color-picker-create').val(),
                         author_icon: $('#embed-author-icon-create').attr('src'),
@@ -3382,9 +3498,9 @@ function open_modal_create_cc() {
                         title_link: $('#embed-title-link-create').val(),
                         description: $('#embed-description-create').val(),
 
-                        field_titles: field_titles.join("$€%¥"),
-                        field_descriptions: field_descriptions.join("$€%¥"),
-                        field_inlines: field_inlines.join("$€%¥"),
+                        field_titles: JSON.stringify(field_titles),
+                        field_descriptions: JSON.stringify(field_descriptions),
+                        field_inlines: JSON.stringify(field_inlines),
 
                         image: $('#embed-image-create').attr('src'),
                         footer_icon: $('#embed-footer-icon-create').attr('src'),
@@ -3546,7 +3662,17 @@ function open_modal_edit_cc(button) {
                     '                        </div>                                                                                                                                                                             ' +
                     '                    </div>                                                                                                                                                                                 ' +
                     '                </div>                                                                                                                                                                                     ' +
-                    '            </div>                                                                                                                                                                                         ';
+                    '            </div>                                                                                                                                                                                         ' +
+                    '           <br/>' +
+                    '           <div class="container small dark">' +
+                    '               <div class="padding-top padding-bottom padding-left padding-right">' +
+                    '                   <div class="settings-disclaimer embed">' +
+                    '                       <div>Command aliases. Seperate multiple aliases by comma. (Max. 10)</div>' +
+                    '                       <div class="tags-input" data-name="tags-input">' +
+                    '                       </div>' +
+                    '                   </div>' +
+                    '               </div>' +
+                    '           </div>';
 
                 // Normal or embed message?
                 html +=
@@ -3923,8 +4049,138 @@ function open_modal_edit_cc(button) {
                 }
                 color_picker_wrapper.style.backgroundColor = color_picker.value;
 
+                // Aliases
+                [].forEach.call(document.getElementsByClassName('tags-input'), function (el) {
+                    let hiddenInput = document.createElement('input');
+                    let mainInput = document.createElement('input');
+                    let tags = [];
+
+                    hiddenInput.setAttribute('type', 'hidden');
+                    hiddenInput.setAttribute('name', el.getAttribute('data-name'));
+
+                    mainInput.setAttribute('type', 'text');
+
+                    // Get aliases in array
+                    let aliases = [];
+                    varCcAliases.forEach(ccAlias => {
+                        if (ccAlias.invoke == invoke)
+                            aliases.push(ccAlias.alias);
+                    });
+
+                    // Write aliases into value like: tag1,tag2,tag3
+                    aliases.forEach(alias => {
+                        if (mainInput.value) mainInput.value = mainInput.value + ",";
+                        mainInput.value = mainInput.value + alias;
+                    });
+                    mainInput.value = mainInput.value + ",";
+
+                    mainInput.classList.add('main-input');
+                    mainInput.addEventListener('input', function () {
+                        let enteredTags = mainInput.value.split(',');
+                        if (enteredTags.length > 1) {
+                            enteredTags.forEach(function (t) {
+                                let filteredTag = filterTag(t, var_prefix);
+                                if (filteredTag.length > 0)
+                                    addTag(filteredTag);
+                            });
+                            mainInput.value = '';
+                        }
+                    });
+                    mainInput.addEventListener('blur', function () {
+                        if (!mainInput.value.endsWith(',')) {
+                            mainInput.value = mainInput.value + ",";
+                            let enteredTags = mainInput.value.split(',');
+                            if (enteredTags.length > 1) {
+                                enteredTags.forEach(function (t) {
+                                    let filteredTag = filterTag(t, var_prefix);
+                                    if (filteredTag.length > 0)
+                                        addTag(filteredTag);
+                                });
+                                mainInput.value = '';
+                            }
+                        }
+                    });
+
+                    mainInput.addEventListener('keydown', function (e) {
+                        let keyCode = e.which || e.keyCode;
+                        if (keyCode === 8 && mainInput.value.length === 0 && tags.length > 0) {
+                            removeTag(tags.length - 1);
+                        }
+                    });
+
+                    el.appendChild(mainInput);
+                    el.appendChild(hiddenInput);
+
+                    // Convert string into actual tags
+                    let enteredTags = mainInput.value.split(',');
+                    if (enteredTags.length > 1) {
+                        enteredTags.forEach(function (t) {
+                            let filteredTag = filterTag(t, var_prefix);
+                            if (filteredTag.length > 0)
+                                addTag(filteredTag);
+                        });
+                        mainInput.value = '';
+                    }
+
+                    function addTag(text) {
+                        let tag = {
+                            text: text,
+                            element: document.createElement('span'),
+                        };
+
+                        tag.element.classList.add('tag');
+                        tag.element.textContent = tag.text;
+
+                        let closeBtn = document.createElement('span');
+                        closeBtn.classList.add('closetag');
+                        closeBtn.addEventListener('click', function () {
+                            removeTag(tags.indexOf(tag));
+                        });
+                        tag.element.prepend(closeBtn);
+
+                        tags.push(tag);
+
+                        el.insertBefore(tag.element, mainInput);
+
+                        refreshTags();
+                    }
+
+                    function removeTag(index) {
+                        let tag = tags[index];
+                        tags.splice(index, 1);
+                        el.removeChild(tag.element);
+                        refreshTags();
+                    }
+
+                    function refreshTags() {
+                        let tagsList = [];
+                        tags.forEach(function (t) {
+                            tagsList.push(t.text);
+                        });
+                        hiddenInput.value = tagsList.join(',');
+                    }
+
+                    function filterTag(tag, prefix) {
+                        let filteredTag = tag.replace(/\s/g, '');
+                        return filteredTag ? prefix + filteredTag : '';
+                    }
+                });
+
                 $('#form_customcommands').on("submit", function (e) {
                     e.preventDefault();
+
+                    let submitTags = [];
+                    let iterator = 0;
+                    $('.tag').each(function (i) {
+                        if (iterator < 10) {
+                            let alias = $(this).text().replace(var_prefix, '');
+                            if (alias != $('#invoke').val()) {
+                                submitTags.push(alias);
+                                iterator++;
+                            }
+                        }
+                    });
+                    let uniqueTags = Array.from(new Set(submitTags));
 
                     if ($('#tab_normal').hasClass('active_cc')) {
                         // Normal message
@@ -3937,6 +4193,7 @@ function open_modal_edit_cc(button) {
                                 guild_id: $('#guild_id-edit').val(),
                                 invoke_old: $('#invoke_old').val(),
                                 invoke_new: $('#invoke').val(),
+                                aliases: JSON.stringify(uniqueTags),
                                 message: $('#normal_msg_desc').val()
                             },
                             success: function () {
@@ -3979,6 +4236,7 @@ function open_modal_edit_cc(button) {
                                 guild_id: $('#guild_id-edit').val(),
                                 invoke_old: $('#invoke_old').val(),
                                 invoke_new: $('#invoke').val(),
+                                aliases: JSON.stringify(uniqueTags),
 
                                 color: $('#color-picker-edit').val(),
                                 author_icon: $('#embed-author-icon-edit').attr('src'),
@@ -3989,9 +4247,9 @@ function open_modal_edit_cc(button) {
                                 title_link: $('#embed-title-link-edit').val(),
                                 description: $('#embed-description-edit').val(),
 
-                                field_titles: field_titles.join("$€%¥"),
-                                field_descriptions: field_descriptions.join("$€%¥"),
-                                field_inlines: field_inlines.join("$€%¥"),
+                                field_titles: JSON.stringify(field_titles),
+                                field_descriptions: JSON.stringify(field_descriptions),
+                                field_inlines: JSON.stringify(field_inlines),
 
                                 image: $('#embed-image-edit').attr('src'),
                                 footer_icon: $('#embed-footer-icon-edit').attr('src'),

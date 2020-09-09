@@ -1264,51 +1264,20 @@ a.commands-button-active {
     display: block;
 }
 
-/* Home Chart */
+/* Highlight Chart */
 
-.highlight-charts {
+.highlight-images {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-template-areas: "mod util" "fun fun";
     grid-gap: 10px;
 }
 
-#mod {
-    grid-area: mod;
-}
-
-#util {
-    grid-area: util;
-}
-
-#fun {
-    grid-area: fun;
-}
-
-.highlight-chart {
-    background-color: var(--discord-gray-dark);
-    border-radius: 5px;
+.highlight-images img {
+    width: 100%;
     margin-top: 20px;
 }
 
-.highlight-chart .title {
-    font-weight: bold;
-    background-color: var(--discord-blue);
-    border-radius: 5px 5px 0 0;
-    padding: 5px 10px;
-    text-align: center;
-}
-
-.highlight-chart .body {
-    padding: 10px 5px 0 5px;
-}
-
-.highlight-chart .body .body-entry {
-    background-color: var(--discord-gray-highlight);
-    margin-bottom: 10px;
-    padding: 5px;
-    text-align: center;
-}
+/* Invite Chart */
 
 .invitechart {
     background-color: var(--discord-gray-dark);
@@ -4084,9 +4053,62 @@ img.emoji {
     text-align: center;
 }
 
+/* Custom Commands Aliases */
+
+.tags-input {
+    border-bottom: 1px solid var(--gray);
+    display: inline-block;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.tags-input input {
+    background-color: transparent;
+    flex-grow: 1;
+}
+
+.tags-input .tag {
+    padding: 0.5em 0.75em;
+    margin: 0.25em 0.1em;
+    display: inline-block;
+    background-color: var(--discord-gray-highlight);
+    transition: all 0.1s linear;
+    border-radius: 5px;
+}
+
+.tags-input .tag .closetag::after {
+    background-color: var(--discord-gray-dark);
+    border-radius: 50%;
+    color: var(--discord-gray-highlight);
+    width: 16px;
+    height: 16px;
+    content: 'x';
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 0.75em;
+    text-align: center;
+    line-height: 15px;
+}
+
+.tags-input .tag .closetag:hover::after {
+    cursor: pointer;
+}
+
+.tags-input .main-input {
+    border: 0;
+    outline: 0;
+    padding: 0.5em 0.1em;
+}
+
 /* TABLET MEDIA QUERY */
 
 @media screen and (max-width: 950px) {
+    /* Highlight Chart */
+    .highlight-images {
+        grid-template-columns: repeat(1, 1fr);
+    }
     /* CC */
     .cc_msg {
         grid-template-columns: auto 100px 105px;

@@ -396,35 +396,46 @@ module.exports = function (bot) {
                                                                     mysql.query(sql, function (err, ccFields) {
                                                                         if (err) { console.log(err); res.sendStatus(500); }
                                                                         else {
-                                                                            sql = "SELECT t.timezone " +
-                                                                                "FROM guilds as g " +
-                                                                                "INNER JOIN const_timezones AS t " +
-                                                                                "ON g.timezone_id=t.id " +
-                                                                                "WHERE g.guild_id=" + mysql.escape(guild.id);
+                                                                            sql = "SELECT * " +
+                                                                                "FROM custom_commands_aliases AS a " +
+                                                                                "INNER JOIN custom_commands AS c " +
+                                                                                "ON a.cc_id=c.id " +
+                                                                                "WHERE c.guild_id=" + mysql.escape(guild.id);
 
-                                                                            mysql.query(sql, function (err, timezones) {
+                                                                            mysql.query(sql, function (err, ccAliases) {
                                                                                 if (err) { console.log(err); res.sendStatus(500); }
                                                                                 else {
-                                                                                    let commandsAmount = ccs.length;
+                                                                                    sql = "SELECT t.timezone " +
+                                                                                        "FROM guilds as g " +
+                                                                                        "INNER JOIN const_timezones AS t " +
+                                                                                        "ON g.timezone_id=t.id " +
+                                                                                        "WHERE g.guild_id=" + mysql.escape(guild.id);
 
-                                                                                    let timestamp_tz_formats = [];
+                                                                                    mysql.query(sql, function (err, timezones) {
+                                                                                        if (err) { console.log(err); res.sendStatus(500); }
+                                                                                        else {
+                                                                                            let commandsAmount = ccs.length;
 
-                                                                                    if (ccEmbeds.length > 0) {
-                                                                                        ccEmbeds.forEach(cce => {
-                                                                                            let timestamp = cce.timestamp;
-                                                                                            let timestamp_utc = moment.tz(timestamp, "UTC");
-                                                                                            let timezone = timezones.length > 0 ? timezones[0].timezone : "UTC";
-                                                                                            let timestamp_tz = timestamp_utc.clone().tz(timezone);
+                                                                                            let timestamp_tz_formats = [];
 
-                                                                                            timestamp_tz_formats.push({
-                                                                                                cc_id: cce.cc_id,
-                                                                                                tz: timestamp_tz.format()
-                                                                                            });
-                                                                                        });
-                                                                                    }
+                                                                                            if (ccEmbeds.length > 0) {
+                                                                                                ccEmbeds.forEach(cce => {
+                                                                                                    let timestamp = cce.timestamp;
+                                                                                                    let timestamp_utc = moment.tz(timestamp, "UTC");
+                                                                                                    let timezone = timezones.length > 0 ? timezones[0].timezone : "UTC";
+                                                                                                    let timestamp_tz = timestamp_utc.clone().tz(timezone);
 
-                                                                                    let botGuild = bot.guilds.cache.get(guild.id);
-                                                                                    res.render('customcommands', { req, prefix, guild, bot, botGuild, color_code, isSupporter, disabled_plugins, timestamp_tz_formats, commandsAmount, ccs, ccEmbeds, ccFields });
+                                                                                                    timestamp_tz_formats.push({
+                                                                                                        cc_id: cce.cc_id,
+                                                                                                        tz: timestamp_tz.format()
+                                                                                                    });
+                                                                                                });
+                                                                                            }
+
+                                                                                            let botGuild = bot.guilds.cache.get(guild.id);
+                                                                                            res.render('customcommands', { req, prefix, guild, bot, botGuild, color_code, isSupporter, disabled_plugins, timestamp_tz_formats, commandsAmount, ccs, ccEmbeds, ccFields, ccAliases });
+                                                                                        }
+                                                                                    });
                                                                                 }
                                                                             });
                                                                         }

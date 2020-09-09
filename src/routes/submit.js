@@ -66,6 +66,45 @@ module.exports = function (bot) {
         } else callback(is_authorized);
     }
 
+    async function getAuthorization(req, id, mysql, bot) {
+        let botUser = bot.users.cache.get(req.user.discordId);
+        let botGuild = bot.guilds.cache.get(id);
+        let isAuthorized = false;
+
+        if (botGuild !== undefined) {
+            // Owner?
+            let isOwner = botGuild.ownerID == req.user.discordId;
+
+            // Admin?
+            let isAdmin = false;
+            let member = undefined;
+
+            if (botGuild !== undefined && botUser !== undefined) {
+                member = botGuild.member(botUser);
+                isAdmin = member.hasPermission("ADMINISTRATOR");
+            }
+
+            // Servant-Moderator?
+            let isServantMod = false;
+
+            let sql = "SELECT * " +
+                "FROM guild_mod_roles " +
+                "WHERE guild_id=" + mysql.escape(id);
+
+            let modRoleIdEntries = await mysql.query(sql);
+
+            modRoleIdEntries.forEach(modRoleIdEntry => {
+                if (member.roles.cache.get(modRoleIdEntry.role_id) !== undefined)
+                    isServantMod = true;
+            });
+
+            // Authorized?
+            if (isOwner || isAdmin || isServantMod) isAuthorized = true;
+        }
+
+        return isAuthorized;
+    }
+
     function checkInvokeUsage(guild_id, mysql, invoke_old, invoke_new, callback) {
         if (invoke_old === invoke_new) return callback(false);
         else {
@@ -78,6 +117,22 @@ module.exports = function (bot) {
                 if (err) { console.log(err); return callback(true); }
                 else if (invokes.length > 0) return callback(true);
                 else return callback(false);
+            });
+        }
+    }
+
+    async function invokeAlreadyUsed(guildId, mysql, invokeOld, invokeNew) {
+        if (invokeOld === invokeNew) return false;
+        else {
+            let sql = "SELECT id " +
+                "FROM custom_commands " +
+                "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                "AND invoke=" + mysql.escape(invokeNew);
+
+            mysql.query(sql, function (err, invokes) {
+                if (err) { console.log(err); return true; }
+                else if (invokes.length > 0) return true;
+                else return false;
             });
         }
     }
@@ -891,9 +946,11 @@ module.exports = function (bot) {
         return callback(new Map([...birthday_countdowns.entries()].sort((a, b) => a.value - b.value)));
     }
 
+    // Custom Commands Normal
     router.post('/customcommands_normal', (req, res) => {
-        const guild_id = req.body.guild_id;
+        const guildId = req.body.guild_id;
         const invoke = req.body.invoke;
+        const aliases = JSON.parse(req.body.aliases);
         const message = req.body.message;
 
         if (invoke.length > 100)
@@ -902,452 +959,737 @@ module.exports = function (bot) {
         if (message.length > 2000)
             message = message.substring(0, 2000);
 
-        get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                // Check if < 100 commands
-                let sql = "SELECT id " +
-                    "FROM custom_commands " +
-                    "WHERE guild_id=" + mysql.escape(guild_id);
-
-                mysql.query(sql, function (err, custom_commands) {
-                    if (err) { console.log(err); res.sendStatus(500); }
-                    else if (custom_commands.length >= 100) res.sendStatus(403);
-                    else {
-                        sql = "SELECT id " +
-                            "FROM custom_commands " +
-                            "WHERE guild_id=" + mysql.escape(guild_id) + " " +
-                            "AND invoke=" + mysql.escape(invoke);
-
-                        mysql.query(sql, function (err, invokes) {
-                            if (err) { console.log(err); res.sendStatus(500); }
-                            else if (invokes.length > 0) res.sendStatus(406);
-                            else {
-                                // Insert new command
-                                sql = "INSERT INTO custom_commands (guild_id,invoke,normal_msg) " +
-                                    "VALUES (" + mysql.escape(guild_id) + "," + mysql.escape(invoke) + "," + mysql.escape(message) + ")";
-
-                                mysql.query(sql, function (err, result) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else res.sendStatus(200);
-                                });
-                            }
-                        });
-                    }
-                });
+        getAuthorization(req, guildId, mysql, bot).then(isAuthorized => {
+            if (isAuthorized) {
+                insertNewCustomCommandNormal(mysql, guildId, invoke, aliases, message)
+                    .then(status => res.sendStatus(status))
+                    .catch(err => console.error(err));
             } else res.render('404', { req });
+        }).catch(err => {
+            console.error(err);
+            res.render('404', { req });
         });
     });
 
+    async function insertNewCustomCommandNormal(mysql, guildId, invoke, aliases, message) {
+        // Check if < 100 custom commands
+        let sql = "SELECT id " +
+            "FROM custom_commands " +
+            "WHERE guild_id=" + mysql.escape(guildId);
+
+        let customCommands;
+        try {
+            customCommands = await mysql.query(sql);
+        } catch (err) {
+            throw err;
+        }
+
+        if (customCommands.length >= 100) return 403;
+        else {
+            // Check if custom command with this invoke already exists
+            sql = "SELECT id " +
+                "FROM custom_commands " +
+                "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                "AND invoke=" + mysql.escape(invoke);
+
+            let invokes;
+            try {
+                invokes = await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            if (invokes[0].length > 0) return 406;
+            else {
+                // Insert new custom command
+                sql = "INSERT INTO custom_commands (guild_id,invoke,normal_msg) " +
+                    "VALUES (" + mysql.escape(guildId) + "," + mysql.escape(invoke) + "," + mysql.escape(message) + ")";
+
+                let result;
+                try {
+                    result = await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                let ccId = result[0].insertId;
+
+                // Insert aliases
+                for (const i in aliases) {
+                    let alias = aliases[i];
+
+                    if (alias.length > 100)
+                        alias = alias.substring(0, 100);
+
+                    // Check if custom command with this alias as invoke exists
+                    sql = "SELECT id " +
+                        "FROM custom_commands " +
+                        "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                        "AND invoke=" + mysql.escape(alias);
+
+                    let invokes;
+                    try {
+                        invokes = await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+
+                    if (invokes[0].length > 0) continue;
+
+                    // Insert Alias
+                    sql = "INSERT INTO custom_commands_aliases (cc_id,alias) " +
+                        "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(alias) + ")";
+
+                    try {
+                        await mysql.query(sql);
+                    } catch (err) {
+                        purgeCustomCommand(mysql, ccId);
+                        throw err;
+                    }
+                }
+
+                return 200;
+            }
+        }
+    }
+
+    // Custom Commands Embed
     router.post('/customcommands_embed', (req, res) => {
-        const guild_id = req.body.guild_id;
+        const guildId = req.body.guild_id;
         const invoke = req.body.invoke;
+        const aliases = JSON.parse(req.body.aliases);
 
         const color = req.body.color;
-        const author_icon = req.body.author_icon;
-        const author_name = req.body.author_name;
-        const author_link = req.body.author_link;
+        const authorIcon = req.body.author_icon;
+        const authorName = req.body.author_name;
+        const authorLink = req.body.author_link;
         const thumbnail = req.body.thumbnail;
         const title = req.body.title;
-        const title_link = req.body.title_link;
+        const titleLink = req.body.title_link;
         const description = req.body.description;
 
-        const field_titles = req.body.field_titles;
-        const field_descriptions = req.body.field_descriptions;
-        const field_inlines = req.body.field_inlines;
-
-        let field_titles_split = field_titles == undefined ? undefined : field_titles.split("$€%¥");
-        let field_descriptions_split = field_descriptions == undefined ? undefined : field_descriptions.split("$€%¥");
-        let field_inlines_split = field_inlines == undefined ? undefined : field_inlines.split("$€%¥");
-
-        field_titles_split = field_titles_split == '' ? undefined : field_titles_split;
-        field_descriptions_split = field_descriptions_split == '' ? undefined : field_descriptions_split;
-        field_inlines_split = field_inlines_split == '' ? undefined : field_inlines_split;
+        const fieldTitles = JSON.parse(req.body.field_titles);
+        const fieldDescriptions = JSON.parse(req.body.field_descriptions);
+        const fieldInlines = JSON.parse(req.body.field_inlines);
 
         const image = req.body.image;
-        const footer_icon = req.body.footer_icon;
-        const footer_text = req.body.footer_text;
+        const footerIcon = req.body.footer_icon;
+        const footerText = req.body.footer_text;
         const timestamp = req.body.timestamp;
 
         if (invoke.length > 100)
             invoke = invoke.substring(0, 100);
 
-        get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                // Check if < 100 commands
-                let sql = "SELECT id " +
-                    "FROM custom_commands " +
-                    "WHERE guild_id=" + mysql.escape(guild_id);
-
-                mysql.query(sql, function (err, custom_commands) {
-                    if (err) { console.log(err); res.sendStatus(500); }
-                    else if (custom_commands.length >= 100) res.sendStatus(403);
-                    else {
-                        sql = "SELECT id " +
-                            "FROM custom_commands " +
-                            "WHERE guild_id=" + mysql.escape(guild_id) + " " +
-                            "AND invoke=" + mysql.escape(invoke);
-
-                        mysql.query(sql, function (err, invokes) {
-                            if (err) { console.log(err); res.sendStatus(500); }
-                            else if (invokes.length > 0) res.sendStatus(406);
-                            else {
-                                // Insert new command
-                                sql = "INSERT INTO custom_commands (guild_id,invoke,normal_msg) " +
-                                    "VALUES (" + mysql.escape(guild_id) + "," + mysql.escape(invoke) + ",'')";
-
-                                mysql.query(sql, function (err, result) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        sql = "SELECT t.timezone " +
-                                            "FROM guilds AS g " +
-                                            "INNER JOIN const_timezones AS t " +
-                                            "ON g.timezone_id=t.id " +
-                                            "WHERE g.guild_id=" + mysql.escape(guild_id);
-
-                                        mysql.query(sql, function (err, timezones) {
-                                            if (err) { console.log(err); res.sendStatus(500); }
-                                            else {
-                                                let timezone = timezones.length > 0 ? timezones[0].timezone : 'UTC';
-                                                let timestamp_tz = moment.tz(timestamp, timezone);
-                                                let timestamp_utc = timestamp_tz.clone().tz('UTC');
-                                                timestamp_utc = timestamp == undefined ? "" : timestamp_utc;
-
-                                                const cc_id = result.insertId;
-
-                                                sql = "INSERT INTO custom_commands_embeds (cc_id,colorcode,author_name,author_url,author_icon_url,title,title_url,thumbnail_url,description,image_url,footer,footer_icon_url,timestamp) " +
-                                                    "VALUES (" + mysql.escape(cc_id) + "," + mysql.escape(color) + "," + mysql.escape(getBlank(author_name)) + "," + mysql.escape(getBlank(author_link)) + "," + mysql.escape(getBlank(author_icon)) + "," + mysql.escape(getBlank(title)) + "," + mysql.escape(getBlank(title_link)) + "," + mysql.escape(getBlank(thumbnail)) + "," + mysql.escape(getBlank(description)) + "," + mysql.escape(getBlank(image)) + "," + mysql.escape(getBlank(footer_text)) + "," + mysql.escape(getBlank(footer_icon)) + "," + mysql.escape(timestamp_utc ? timestamp_utc.format() : "") + ")";
-
-                                                mysql.query(sql, function (err, result) {
-                                                    if (err) { console.log(err); purgeCustomCommand(res, mysql, cc_id); }
-                                                    else addCcFields(res, mysql, cc_id, field_titles_split, field_descriptions_split, field_inlines_split);
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
+        getAuthorization(req, guildId, mysql, bot).then(isAuthorized => {
+            if (isAuthorized) {
+                insertNewCustomCommandEmbed(mysql, guildId, invoke, aliases, color, authorIcon, authorName, authorLink, thumbnail, title, titleLink, description, fieldTitles, fieldDescriptions, fieldInlines, image, footerIcon, footerText, timestamp)
+                    .then(status => res.sendStatus(status))
+                    .catch(err => console.error(err));
             } else res.render('404', { req });
+        }).catch(err => {
+            console.error(err);
+            res.render('404', { req });
         });
     });
 
-    async function addCcFields(res, mysql, cc_id, field_titles_split, field_descriptions_split, field_inlines_split) {
-        if (field_titles_split) {
-            let i = 0;
-            for (const field_title in field_titles_split) {
-                sql = "INSERT INTO custom_commands_fields (cc_id,field_no,title,description,inline) " +
-                    "VALUES (" + mysql.escape(cc_id) + "," + mysql.escape(i + 1) + "," + mysql.escape(field_titles_split[i]) + "," + mysql.escape(field_descriptions_split[i]) + "," + mysql.escape(field_inlines_split[i] == 'inline') + ");"
+    async function insertNewCustomCommandEmbed(mysql, guildId, invoke, aliases, color, authorIcon, authorName, authorLink, thumbnail, title, titleLink, description, fieldTitles, fieldDescriptions, fieldInlines, image, footerIcon, footerText, timestamp) {
+        // Check if < 100 custom commands
+        let sql = "SELECT id " +
+            "FROM custom_commands " +
+            "WHERE guild_id=" + mysql.escape(guildId);
 
-                await mysql.query(sql);
-                i++;
-            }
+        let customCommands;
+        try {
+            customCommands = await mysql.query(sql);
+        } catch (err) {
+            throw err;
         }
 
-        res.sendStatus(200);
+        if (customCommands.length >= 100) return 403;
+        else {
+            // Check if custom command with this invoke already exists
+            sql = "SELECT id " +
+                "FROM custom_commands " +
+                "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                "AND invoke=" + mysql.escape(invoke);
+
+            let invokes;
+            try {
+                invokes = await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            if (invokes[0].length > 0) return 406;
+            else {
+                // Insert new custom command
+                sql = "INSERT INTO custom_commands (guild_id,invoke,normal_msg) " +
+                    "VALUES (" + mysql.escape(guildId) + "," + mysql.escape(invoke) + ",'')";
+
+                let result;
+                try {
+                    result = await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                let ccId = result[0].insertId;
+
+                // Insert aliases
+                for (const i in aliases) {
+                    let alias = aliases[i];
+
+                    if (alias.length > 100)
+                        alias = alias.substring(0, 100);
+
+                    // Check if custom command with this alias as invoke exists
+                    sql = "SELECT id " +
+                        "FROM custom_commands " +
+                        "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                        "AND invoke=" + mysql.escape(alias);
+
+                    let invokes;
+                    try {
+                        invokes = await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+
+                    if (invokes[0].length > 0) continue;
+
+                    // Insert Alias
+                    sql = "INSERT INTO custom_commands_aliases (cc_id,alias) " +
+                        "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(alias) + ")";
+
+                    try {
+                        await mysql.query(sql);
+                    } catch (err) {
+                        purgeCustomCommand(mysql, ccId);
+                        throw err;
+                    }
+                }
+
+                // Get guild's timezone
+                sql = "SELECT t.timezone " +
+                    "FROM guilds AS g " +
+                    "INNER JOIN const_timezones AS t " +
+                    "ON g.timezone_id=t.id " +
+                    "WHERE g.guild_id=" + mysql.escape(guildId);
+
+                let timezones;
+                try {
+                    timezones = await mysql.query(sql);
+                } catch (err) {
+                    purgeCustomCommand(mysql, ccId);
+                    throw err;
+                }
+
+                let timezone = timezones.length > 0 ? timezones[0].timezone : 'UTC';
+                let timestampTz = moment.tz(timestamp, timezone);
+                let timestampUtc = timestampTz.clone().tz('UTC');
+                timestampUtc = timestamp == undefined ? "" : timestampUtc;
+
+                sql = "INSERT INTO custom_commands_embeds (cc_id,colorcode,author_name,author_url,author_icon_url,title,title_url,thumbnail_url,description,image_url,footer,footer_icon_url,timestamp) " +
+                    "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(color) + "," + mysql.escape(getBlank(authorName)) + "," + mysql.escape(getBlank(authorLink)) + "," + mysql.escape(getBlank(authorIcon)) + "," + mysql.escape(getBlank(title)) + "," + mysql.escape(getBlank(titleLink)) + "," + mysql.escape(getBlank(thumbnail)) + "," + mysql.escape(getBlank(description)) + "," + mysql.escape(getBlank(image)) + "," + mysql.escape(getBlank(footerText)) + "," + mysql.escape(getBlank(footerIcon)) + "," + mysql.escape(timestampUtc ? timestampUtc.format() : "") + ")";
+
+                try {
+                    await mysql.query(sql);
+                } catch (err) {
+                    purgeCustomCommand(mysql, ccId);
+                    throw err;
+                }
+
+                if (fieldTitles) {
+                    for (const i in fieldTitles) {
+                        let fieldTitle = fieldTitles[i];
+                        let fieldDescription = fieldDescriptions[i];
+                        let fieldInline = fieldInlines[i];
+
+                        if (fieldTitles.length > 256)
+                            fieldTitle = fieldTitle.substring(0, 256);
+
+                        if (fieldDescription.length > 1024)
+                            fieldDescription = fieldDescription.substring(0, 1024);
+
+                        sql = "INSERT INTO custom_commands_fields (cc_id,field_no,title,description,inline) " +
+                            "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(i + 1) + "," + mysql.escape(fieldTitle) + "," + mysql.escape(fieldDescription) + "," + mysql.escape(fieldInline == 'inline') + ");"
+
+                        try {
+                            await mysql.query(sql);
+                        } catch (err) {
+                            purgeCustomCommand(mysql, ccId);
+                            throw err;
+                        }
+                    }
+                }
+
+                return 200;
+            }
+        }
     }
 
-    function purgeCustomCommand(res, mysql, cc_id) {
-        let sql = "DELETE FROM custom_commands " +
-            "WHERE id=" + mysql.escape(cc_id);
+    async function purgeCustomCommand(mysql, ccId) {
+        try {
+            let sql = "DELETE FROM custom_commands " +
+                "WHERE id=" + mysql.escape(ccId);
 
-        mysql.query(sql, function (err, result) {
-            if (err) { console.log(err); res.sendStatus(500); }
-            else {
-                sql = "DELETE FROM custom_commands_embeds " +
-                    "WHERE cc_id=" + mysql.escape(cc_id);
+            await mysql.query(sql);
 
-                mysql.query(sql, function (err, result) {
-                    if (err) { console.log(err); res.sendStatus(500); }
-                    else {
-                        sql = "DELETE FROM custom_commands_fields " +
-                            "WHERE cc_id=" + mysql.escape(cc_id);
+            sql = "DELETE FROM custom_commands_embeds " +
+                "WHERE cc_id=" + mysql.escape(ccId);
 
-                        mysql.query(sql, function (err, result) {
-                            if (err) { console.log(err); res.sendStatus(500); }
-                            else res.sendStatus(500);
-                        });
-                    }
-                });
-            }
-        });
+            await mysql.query(sql);
+
+            sql = "DELETE FROM custom_commands_fields " +
+                "WHERE cc_id=" + mysql.escape(ccId);
+
+            await mysql.query(sql);
+
+            sql = "DELETE FROM custom_commands_aliases " +
+                "WHERE cc_id=" + mysql.escape(ccId);
+
+            await mysql.query(sql);
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     router.post('/customcommands_normal_edit', (req, res) => {
-        const guild_id = req.body.guild_id;
-        const invoke_old = req.body.invoke_old;
-        const invoke_new = req.body.invoke_new;
+        const guildId = req.body.guild_id;
+        const invokeOld = req.body.invoke_old;
+        const invokeNew = req.body.invoke_new;
+        const aliases = JSON.parse(req.body.aliases);
         const message = req.body.message;
 
-        if (invoke_new.length > 100)
-            invoke_new = invoke_new.substring(0, 100);
+        if (invokeNew.length > 100)
+            invokeNew = invokeNew.substring(0, 100);
 
         if (message.length > 2000)
             message = message.substring(0, 2000);
 
-        get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                checkInvokeUsage(guild_id, mysql, invoke_old, invoke_new, function (invokeUsed) {
-                    if (invokeUsed) res.sendStatus(406)
-                    else {
-                        // Update CC
-                        let sql = "UPDATE custom_commands " +
-                            "SET invoke=" + mysql.escape(invoke_new) + ", normal_msg=" + mysql.escape(message) + " " +
-                            "WHERE guild_id=" + mysql.escape(guild_id) + " " +
-                            "AND invoke=" + mysql.escape(invoke_old);
-
-                        mysql.query(sql, function (err, result) {
-                            if (err) { console.log(err); res.sendStatus(500); }
-                            else {
-                                // Get ccId
-                                sql = "SELECT id " +
-                                    "FROM custom_commands " +
-                                    "WHERE guild_id=" + mysql.escape(guild_id) + " " +
-                                    "AND invoke=" + mysql.escape(invoke_new);
-
-                                mysql.query(sql, function (err, ids) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else if (ids.length <= 0) res.sendStatus(500);
-                                        else {
-                                            let ccId = ids[0].id;
-
-                                            // Delete Embeds
-                                            sql = "DELETE FROM custom_commands_embeds " +
-                                                "WHERE cc_id=" + mysql.escape(ccId);
-
-                                            mysql.query(sql, function (err, result) {
-                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                else {
-                                                    // Delete Fields
-                                                    sql = "DELETE FROM custom_commands_fields " +
-                                                        "WHERE cc_id=" + mysql.escape(ccId);
-
-                                                    mysql.query(sql, function (err, result) {
-                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                        else res.sendStatus(200);
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
-                            }
+        getAuthorization(req, guildId, mysql, bot)
+            .then(isAuthorized => {
+                if (isAuthorized) {
+                    updateCcNormal(guildId, mysql, invokeOld, invokeNew, aliases, message)
+                        .then(status => res.sendStatus(status))
+                        .catch(err => {
+                            console.error(err);
+                            res.sendStatus(500);
                         });
-                    }
-                });
-            } else res.render('404', { req });
-        });
+                } else res.render('404', { req });
+            })
+            .catch(err => {
+                console.error(err)
+                res.render('404', { req });
+            });
     });
+
+    async function updateCcNormal(guildId, mysql, invokeOld, invokeNew, aliases, message) {
+        let alreadyUsed;
+        try {
+            alreadyUsed = await invokeAlreadyUsed(guildId, mysql, invokeOld, invokeNew);
+        } catch (err) {
+            throw err;
+        }
+
+        if (alreadyUsed) return 406;
+        else {
+            // Update Custom Command
+            let sql = "UPDATE custom_commands " +
+                "SET invoke=" + mysql.escape(invokeNew) + ", normal_msg=" + mysql.escape(message) + " " +
+                "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                "AND invoke=" + mysql.escape(invokeOld);
+
+            try {
+                await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            // Get ccId
+            sql = "SELECT id " +
+                "FROM custom_commands " +
+                "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                "AND invoke=" + mysql.escape(invokeNew);
+
+            let ids;
+            try {
+                ids = await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            if (ids.length <= 0) return 500;
+            else {
+                let ccId = ids[0][0].id;
+
+                // Delete Embeds
+                sql = "DELETE FROM custom_commands_embeds " +
+                    "WHERE cc_id=" + mysql.escape(ccId);
+
+                try {
+                    await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                // Delete Fields
+                sql = "DELETE FROM custom_commands_fields " +
+                    "WHERE cc_id=" + mysql.escape(ccId);
+
+                try {
+                    await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                // Update Aliases
+                sql = "DELETE FROM custom_commands_aliases " +
+                    "WHERE cc_id=" + mysql.escape(ccId);
+
+                try {
+                    await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                for (const i in aliases) {
+                    let alias = aliases[i];
+
+                    if (alias.length > 100) {
+                        alias = alias.substring(0, 100);
+                    }
+
+                    // Check if custom command with this alias as invoke exists
+                    sql = "SELECT id " +
+                        "FROM custom_commands " +
+                        "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                        "AND invoke=" + mysql.escape(alias);
+
+                    let invokes;
+                    try {
+                        invokes = await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+
+                    if (invokes[0].length > 0) continue;
+
+                    // Insert Alias
+                    sql = "INSERT INTO custom_commands_aliases (cc_id,alias) " +
+                        "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(alias) + ")";
+
+                    try {
+                        await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+                }
+
+                return 200;
+            }
+        }
+    }
 
     router.post('/customcommands_embed_edit', (req, res) => {
-        const guild_id = req.body.guild_id;
-        const invoke_old = req.body.invoke_old;
-        const invoke_new = req.body.invoke_new;
+        const guildId = req.body.guild_id;
+        const invokeOld = req.body.invoke_old;
+        const invokeNew = req.body.invoke_new;
+        const aliases = JSON.parse(req.body.aliases);
 
         const color = req.body.color;
-        const author_icon = req.body.author_icon;
-        const author_name = req.body.author_name;
-        const author_link = req.body.author_link;
+        const authorIcon = req.body.author_icon;
+        const authorName = req.body.author_name;
+        const authorLink = req.body.author_link;
         const thumbnail = req.body.thumbnail;
         const title = req.body.title;
-        const title_link = req.body.title_link;
+        const titleLink = req.body.title_link;
         const description = req.body.description;
 
-        const field_titles = req.body.field_titles;
-        const field_descriptions = req.body.field_descriptions;
-        const field_inlines = req.body.field_inlines;
-
-        let field_titles_split = field_titles == undefined ? undefined : field_titles.split("$€%¥");
-        let field_descriptions_split = field_descriptions == undefined ? undefined : field_descriptions.split("$€%¥");
-        let field_inlines_split = field_inlines == undefined ? undefined : field_inlines.split("$€%¥");
-
-        field_titles_split = field_titles_split == '' ? undefined : field_titles_split;
-        field_descriptions_split = field_descriptions_split == '' ? undefined : field_descriptions_split;
-        field_inlines_split = field_inlines_split == '' ? undefined : field_inlines_split;
+        const fieldTitles = JSON.parse(req.body.field_titles);
+        const fieldDescriptions = JSON.parse(req.body.field_descriptions);
+        const fieldInlines = JSON.parse(req.body.field_inlines);
 
         const image = req.body.image;
-        const footer_icon = req.body.footer_icon;
-        const footer_text = req.body.footer_text;
+        const footerIcon = req.body.footer_icon;
+        const footerText = req.body.footer_text;
         const timestamp = req.body.timestamp;
 
-        if (invoke_new.length > 100)
-            invoke_new = invoke_new.substring(0, 100);
+        if (invokeNew.length > 100)
+            invokeNew = invokeNew.substring(0, 100);
 
-        get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                checkInvokeUsage(guild_id, mysql, invoke_old, invoke_new, function (invokeUsed) {
-                    if (invokeUsed) res.sendStatus(406)
-                    else {
-                        // Update CC
-                        let sql = "UPDATE custom_commands " +
-                            "SET invoke=" + mysql.escape(invoke_new) + ", normal_msg='' " +
-                            "WHERE guild_id=" + mysql.escape(guild_id) + " " +
-                            "AND invoke=" + mysql.escape(invoke_old);
-
-                        mysql.query(sql, function (err, result) {
-                            if (err) { console.log(err); res.sendStatus(500); }
-                            else {
-                                // Get ccId
-                                sql = "SELECT id " +
-                                    "FROM custom_commands " +
-                                    "WHERE guild_id=" + mysql.escape(guild_id) + " " +
-                                    "AND invoke=" + mysql.escape(invoke_new);
-
-                                mysql.query(sql, function (err, ids) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else if (ids.length <= 0) res.sendStatus(500);
-                                    else {
-                                        let ccId = ids[0].id;
-
-                                        // Check if there is an entry in custom_commands_embeds to update, otherwise insert it (this happens if you update a cc from normal to embed message)
-                                        sql = "SELECT id " +
-                                            "FROM custom_commands_embeds " +
-                                            "WHERE cc_id=" + mysql.escape(ccId);
-
-                                        mysql.query(sql, function (err, result) {
-                                            if (err) { console.log(err); res.sendStatus(500); }
-                                            else {
-                                                let hasEntry = result.length > 0;
-
-                                                if (hasEntry) {
-                                                    sql = "SELECT t.timezone " +
-                                                        "FROM guilds AS g " +
-                                                        "INNER JOIN const_timezones AS t " +
-                                                        "ON g.timezone_id=t.id " +
-                                                        "WHERE g.guild_id=" + mysql.escape(guild_id);
-
-                                                    mysql.query(sql, function (err, timezones) {
-                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                        else {
-                                                            let timezone = timezones.length > 0 ? timezones[0].timezone : 'UTC';
-                                                            let timestamp_tz = moment.tz(timestamp, timezone);
-                                                            let timestamp_utc = timestamp_tz.clone().tz('UTC');
-                                                            timestamp_utc = timestamp == undefined ? "" : timestamp_utc;
-
-                                                            // Update CC Embeds
-                                                            sql = "UPDATE custom_commands_embeds " +
-                                                                "SET colorcode=" + mysql.escape(color) + ", author_name=" + mysql.escape(author_name) + ", author_url=" + mysql.escape(author_link) + ", author_icon_url=" + mysql.escape(author_icon) + ", title=" + mysql.escape(title) + ", title_url=" + mysql.escape(title_link) + ", thumbnail_url=" + mysql.escape(thumbnail) + ", description=" + mysql.escape(description) + ", image_url=" + mysql.escape(image) + ", footer=" + mysql.escape(footer_text) + ", footer_icon_url=" + mysql.escape(footer_icon) + ", timestamp=" + mysql.escape(timestamp_utc ? timestamp_utc.format() : "") + " " +
-                                                                "WHERE cc_id=" + mysql.escape(ccId);
-
-                                                            mysql.query(sql, function (err, result) {
-                                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                                else {
-                                                                    // To update the fields, we will just delete all and insert them new
-                                                                    // Delete fields
-                                                                    sql = "DELETE FROM custom_commands_fields " +
-                                                                        "WHERE cc_id=" + mysql.escape(ccId);
-
-                                                                    mysql.query(sql, function (err, result) {
-                                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                                        else {
-                                                                            // Insert new fields
-                                                                            addCcFields(res, mysql, ccId, field_titles_split, field_descriptions_split, field_inlines_split);
-                                                                        }
-                                                                    });
-                                                                }
-                                                            });
-                                                        }
-                                                    });
-                                                } else {
-                                                    sql = "SELECT t.timezone " +
-                                                        "FROM guilds AS g " +
-                                                        "INNER JOIN const_timezones AS t " +
-                                                        "ON g.timezone_id=t.id " +
-                                                        "WHERE g.guild_id=" + mysql.escape(guild_id);
-
-                                                    mysql.query(sql, function (err, timezones) {
-                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                        else {
-                                                            let timezone = timezones.length > 0 ? timezones[0].timezone : 'UTC';
-                                                            let timestamp_tz = moment.tz(timestamp, timezone);
-                                                            let timestamp_utc = timestamp_tz.clone().tz('UTC');
-                                                            timestamp_utc = timestamp == undefined ? "" : timestamp_utc;
-
-                                                            // Insert CC Embeds
-                                                            sql = "INSERT INTO custom_commands_embeds (cc_id,colorcode,author_name,author_url,author_icon_url,title,title_url,thumbnail_url,description,image_url,footer,footer_icon_url,timestamp) " +
-                                                                "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(color) + "," + mysql.escape(getBlank(author_name)) + "," + mysql.escape(getBlank(author_link)) + "," + mysql.escape(getBlank(author_icon)) + "," + mysql.escape(getBlank(title)) + "," + mysql.escape(getBlank(title_link)) + "," + mysql.escape(getBlank(thumbnail)) + "," + mysql.escape(getBlank(description)) + "," + mysql.escape(getBlank(image)) + "," + mysql.escape(getBlank(footer_text)) + "," + mysql.escape(getBlank(footer_icon)) + "," + mysql.escape(timestamp_utc ? timestamp_utc.format() : "") + ")";
-
-                                                            mysql.query(sql, function (err, result) {
-                                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                                else {
-                                                                    // To update the fields, we will just delete all and insert them new
-                                                                    // Delete fields
-                                                                    sql = "DELETE FROM custom_commands_fields " +
-                                                                        "WHERE cc_id=" + mysql.escape(ccId);
-
-                                                                    mysql.query(sql, function (err, result) {
-                                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                                        else {
-                                                                            // Insert new fields
-                                                                            addCcFields(res, mysql, ccId, field_titles_split, field_descriptions_split, field_inlines_split);
-                                                                        }
-                                                                    });
-                                                                }
-                                                            });
-                                                        }
-                                                    });
-                                                }
-                                            }
-                                        });
-                                    }
-                                });
-                            }
+        getAuthorization(req, guildId, mysql, bot)
+            .then(isAuthorized => {
+                if (isAuthorized) {
+                    updateCcEmbed(guildId, mysql, invokeOld, invokeNew, aliases, color, authorIcon, authorName, authorLink, thumbnail, title, titleLink, description, fieldTitles, fieldDescriptions, fieldInlines, image, footerIcon, footerText, timestamp)
+                        .then(status => res.sendStatus(status))
+                        .catch(err => {
+                            console.error(err);
+                            res.sendStatus(500);
                         });
-                    }
-                });
-            } else res.render('404', { req });
-        });
+                } else res.render('404', { req });
+            })
+            .catch(err => {
+                console.error(err)
+                res.render('404', { req });
+            });
     });
+
+    async function updateCcEmbed(guildId, mysql, invokeOld, invokeNew, aliases, color, authorIcon, authorName, authorLink, thumbnail, title, titleLink, description, fieldTitles, fieldDescriptions, fieldInlines, image, footerIcon, footerText, timestamp) {
+        let alreadyUsed;
+        try {
+            alreadyUsed = await invokeAlreadyUsed(guildId, mysql, invokeOld, invokeNew);
+        } catch (err) {
+            throw err;
+        }
+
+        if (alreadyUsed) return 406;
+        else {
+            // Update Custom Command
+            let sql = "UPDATE custom_commands " +
+                "SET invoke=" + mysql.escape(invokeNew) + ", normal_msg='' " +
+                "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                "AND invoke=" + mysql.escape(invokeOld);
+
+            try {
+                await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            // Get ccId
+            sql = "SELECT id " +
+                "FROM custom_commands " +
+                "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                "AND invoke=" + mysql.escape(invokeNew);
+
+            let ids;
+            try {
+                ids = await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            if (ids.length <= 0) return 500;
+            else {
+                let ccId = ids[0][0].id;
+
+                // Get guild's timezone
+                sql = "SELECT t.timezone " +
+                    "FROM guilds AS g " +
+                    "INNER JOIN const_timezones AS t " +
+                    "ON g.timezone_id=t.id " +
+                    "WHERE g.guild_id=" + mysql.escape(guildId);
+
+                let timezones;
+                try {
+                    timezones = await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                let timezone = timezones.length > 0 ? timezones[0].timezone : 'UTC';
+                let timestampTz = moment.tz(timestamp, timezone);
+                let timestampUtc = timestampTz.clone().tz('UTC');
+                timestampUtc = timestamp == undefined ? "" : timestampUtc;
+
+                // Check if there is an entry in custom_commands_embeds to update, otherwise insert it (this happens if you update a cc from normal to embed message)
+                sql = "SELECT id " +
+                    "FROM custom_commands_embeds " +
+                    "WHERE cc_id=" + mysql.escape(ccId);
+
+                let result;
+                try {
+                    result = await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+                let hasEntry = result[0].length > 0;
+
+                if (hasEntry) {
+                    // Update CC Embeds
+                    sql = "UPDATE custom_commands_embeds " +
+                        "SET colorcode=" + mysql.escape(color) + ", author_name=" + mysql.escape(authorName) + ", author_url=" + mysql.escape(authorLink) + ", author_icon_url=" + mysql.escape(authorIcon) + ", title=" + mysql.escape(title) + ", title_url=" + mysql.escape(titleLink) + ", thumbnail_url=" + mysql.escape(thumbnail) + ", description=" + mysql.escape(description) + ", image_url=" + mysql.escape(image) + ", footer=" + mysql.escape(footerText) + ", footer_icon_url=" + mysql.escape(footerIcon) + ", timestamp=" + mysql.escape(timestampUtc ? timestampUtc.format() : "") + " " +
+                        "WHERE cc_id=" + mysql.escape(ccId);
+
+                    try {
+                        await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+                } else {
+                    // Insert CC Embeds
+                    sql = "INSERT INTO custom_commands_embeds (cc_id,colorcode,author_name,author_url,author_icon_url,title,title_url,thumbnail_url,description,image_url,footer,footer_icon_url,timestamp) " +
+                        "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(color) + "," + mysql.escape(getBlank(authorName)) + "," + mysql.escape(getBlank(authorLink)) + "," + mysql.escape(getBlank(authorIcon)) + "," + mysql.escape(getBlank(title)) + "," + mysql.escape(getBlank(titleLink)) + "," + mysql.escape(getBlank(thumbnail)) + "," + mysql.escape(getBlank(description)) + "," + mysql.escape(getBlank(image)) + "," + mysql.escape(getBlank(footerText)) + "," + mysql.escape(getBlank(footerIcon)) + "," + mysql.escape(timestampUtc ? timestampUtc.format() : "") + ")";
+
+                    try {
+                        await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+                }
+
+                // To update the fields, we will just delete all and insert them new
+                // Delete fields
+                sql = "DELETE FROM custom_commands_fields " +
+                    "WHERE cc_id=" + mysql.escape(ccId);
+
+                try {
+                    await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                // Insert fields
+                if (fieldTitles) {
+                    for (const i in fieldTitles) {
+                        let fieldTitle = fieldTitles[i];
+                        let fieldDescription = fieldDescriptions[i];
+                        let fieldInline = fieldInlines[i];
+
+                        if (fieldTitles.length > 256)
+                            fieldTitle = fieldTitle.substring(0, 256);
+
+                        if (fieldDescription.length > 1024)
+                            fieldDescription = fieldDescription.substring(0, 1024);
+
+                        sql = "INSERT INTO custom_commands_fields (cc_id,field_no,title,description,inline) " +
+                            "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(i + 1) + "," + mysql.escape(fieldTitle) + "," + mysql.escape(fieldDescription) + "," + mysql.escape(fieldInline == 'inline') + ");"
+
+                        try {
+                            await mysql.query(sql);
+                        } catch (err) {
+                            purgeCustomCommand(mysql, ccId);
+                            throw err;
+                        }
+                    }
+                }
+
+                // Update Aliases
+                sql = "DELETE FROM custom_commands_aliases " +
+                    "WHERE cc_id=" + mysql.escape(ccId);
+
+                try {
+                    await mysql.query(sql);
+                } catch (err) {
+                    throw err;
+                }
+
+                for (const i in aliases) {
+                    let alias = aliases[i];
+
+                    if (alias.length > 100) {
+                        alias = alias.substring(0, 100);
+                    }
+
+                    // Check if custom command with this alias as invoke exists
+                    sql = "SELECT id " +
+                        "FROM custom_commands " +
+                        "WHERE guild_id=" + mysql.escape(guildId) + " " +
+                        "AND invoke=" + mysql.escape(alias);
+
+                    let invokes;
+                    try {
+                        invokes = await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+
+                    if (invokes[0].length > 0) continue;
+
+                    // Insert Alias
+                    sql = "INSERT INTO custom_commands_aliases (cc_id,alias) " +
+                        "VALUES (" + mysql.escape(ccId) + "," + mysql.escape(alias) + ")";
+
+                    try {
+                        await mysql.query(sql);
+                    } catch (err) {
+                        throw err;
+                    }
+                }
+
+                return 200;
+            }
+        }
+    }
 
     router.post('/delete_customcommand', (req, res) => {
-        const guild_id = req.body.guild_id;
+        const guildId = req.body.guild_id;
         const invoke = req.body.invoke;
 
-        get_authorization(req, guild_id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                let sql = "SELECT id " +
-                    "FROM custom_commands " +
-                    "WHERE guild_id=" + mysql.escape(guild_id) + " " +
-                    "AND invoke=" + mysql.escape(invoke);
-
-                mysql.query(sql, function (err, ids) {
-                    if (err) { console.log(err); res.sendStatus(500); }
-                    else {
-                        if (ids.length > 0) {
-                            const id = ids[0].id;
-
-                            sql = "DELETE FROM custom_commands " +
-                                "WHERE id=" + mysql.escape(id);
-
-                            mysql.query(sql, function (err, result) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "DELETE FROM custom_commands_embeds " +
-                                        "WHERE cc_id=" + mysql.escape(id);
-
-                                    mysql.query(sql, function (err, result) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            sql = "DELETE FROM custom_commands_fields " +
-                                                "WHERE cc_id=" + mysql.escape(id);
-
-                                            mysql.query(sql, function (err, result) {
-                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                else res.sendStatus(200);
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        } else res.sendStatus(500);
-                    }
-                });
-            } else res.render('404', { req });
-        });
+        getAuthorization(req, guildId, mysql, bot)
+            .then(isAuthorized => {
+                if (isAuthorized) {
+                    deleteCustomCommand(guildId, invoke)
+                        .then(status => res.sendStatus(status))
+                        .catch(err => {
+                            console.error(err);
+                            res.sendStatus(500);
+                        });
+                } else res.render('404', { req });
+            })
+            .catch(err => {
+                console.error(err);
+                res.render('404', { req });
+            });
     });
+
+    async function deleteCustomCommand(guildId, invoke) {
+        // Get ccId
+        let sql = "SELECT id " +
+            "FROM custom_commands " +
+            "WHERE guild_id=" + mysql.escape(guildId) + " " +
+            "AND invoke=" + mysql.escape(invoke);
+
+        let ids;
+        try {
+            ids = await mysql.query(sql);
+        } catch (err) {
+            throw err;
+        }
+
+        if (ids.length > 0) {
+            const ccId = ids[0][0].id;
+
+            sql = "DELETE FROM custom_commands " +
+                "WHERE id=" + mysql.escape(ccId);
+
+            try {
+                await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            sql = "DELETE FROM custom_commands_embeds " +
+                "WHERE cc_id=" + mysql.escape(ccId);
+
+            try {
+                await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            sql = "DELETE FROM custom_commands_fields " +
+                "WHERE cc_id=" + mysql.escape(ccId);
+
+            try {
+                await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            sql = "DELETE FROM custom_commands_aliases " +
+                "WHERE cc_id=" + mysql.escape(ccId);
+
+            try {
+                await mysql.query(sql);
+            } catch (err) {
+                throw err;
+            }
+
+            return 200;
+        } else return 500;
+    }
 
     router.post('/embed', (req, res) => {
         const guild_id = req.body.guild_id;

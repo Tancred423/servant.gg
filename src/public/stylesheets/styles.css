@@ -4102,6 +4102,17 @@ img.emoji {
     padding: 0.5em 0.1em;
 }
 
+/* Statistics */
+
+#server-amount-title {
+    color: white;
+    text-align: center;
+}
+
+#server-amount-wrapper {
+    /* width: 30%; */
+}
+
 /* TABLET MEDIA QUERY */
 
 @media screen and (max-width: 950px) {

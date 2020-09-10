@@ -1,0 +1,70 @@
+<%- include('partials/header-1') -%>
+<!-- Primary Meta Tags -->
+<title>Servant | Statistics</title>
+<meta name="title" content="Servant | Statistics">
+<meta name="description" content="Statistics!">
+
+<!-- SEO -->
+<meta name="keywords" content="discord,discordbot,bot,bots,servant,moderation,information,fun,interaction,random,utility,role management,channel management,management,leveling,giveaways,giveaway,polls,poll,level,levels,social interactions,anime,voice management,voice channel,voice,embed,profile,birthday,coinflip,remindme,reminder,timezone">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="30 days">
+<meta name="author" content="Tancred#0001">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://servant.gg/statistics">
+<meta property="og:title" content="Servant | Statistics">
+<meta property="og:description" content="Statistics!">
+<meta property="og:image" content="https://i.imgur.com/lLuoClj.jpg">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://servant.gg/statistics">
+<meta property="twitter:title" content="Servant | Statistics">
+<meta property="twitter:description" content="Statistics!">
+<meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
+<%- include('partials/header-2') -%>
+<%- include('partials/nav') -%>
+
+<div class="main-wrapper">
+
+    <div id="server-amount-title">
+        <h1>The amount of servers Servant is on over time</h1>
+    </div>
+
+    <div id="server-amount-wrapper">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <script>
+        var labels = <%- JSON.stringify(labels) %>;
+        var data = <%- JSON.stringify(data) %>;
+
+        // Display graph
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'line',
+
+            // The data for our dataset
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Amount of servers',
+                    backgroundColor: 'rgba(255, 99, 132, 0)',
+                    borderColor: 'rgb(114, 137, 218)',
+                    data: data
+                }]
+            },
+
+            // Configuration options go here
+            options: {}
+        });
+    </script>
+</div>
+
+<%- include('partials/footer') -%>

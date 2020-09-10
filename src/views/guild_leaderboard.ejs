@@ -75,19 +75,20 @@
           <% if (exps.length == 0) { %>
           <div>No entries</div>
           <% } else { %>
-          <% let counter = 1; %>
-          <% exps.forEach(exp => { %>
+          <%  let counter = 1; %>
+          <%  exps.forEach(exp => { %>
+          <%    if (counter <= 100) { %>
 
-          <% let currentExp = exp.exp; %>
-          <% let currentLevel = getLevelFromExp(currentExp); %>
-          <% let neededExp = getLevelExp(currentLevel); %>
-          <% let currentExpOnThisLevel = currentExp - getTotalLevelExp(currentLevel - 1); %>
-          <% let percent = getLevelPercent(currentExpOnThisLevel, neededExp); %>
+          <%      let currentExp = exp.exp; %>
+          <%      let currentLevel = getLevelFromExp(currentExp); %>
+          <%      let neededExp = getLevelExp(currentLevel); %>
+          <%      let currentExpOnThisLevel = currentExp - getTotalLevelExp(currentLevel - 1); %>
+          <%      let percent = getLevelPercent(currentExpOnThisLevel, neededExp); %>
 
-          <% let user = bot.users.cache.get(exp.user_id); %>
+          <%      let user = bot.users.cache.get(exp.user_id); %>
 
-          <% let botGuild = bot.guilds.cache.get(guild.id); %>
-          <% if (user !== undefined) { %>
+          <%      let botGuild = bot.guilds.cache.get(guild.id); %>
+          <%      if (user !== undefined) { %>
           <div class="block">
             <div class="lead-user-wrapper">
               <div class="delete-user-fake <%= hidden %>"></div>
@@ -100,12 +101,12 @@
                     </div>
                   </div>
                   <div class="name">
-                    <% if (user === undefined) { %>
+                    <% if (user.avatar === null) { %>
                     <img src="/images/no_user.png" alt="Default Avatar">
                     <% } else { %>
                     <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png">
                     <% } %>
-                    <%= user == undefined ? "Name not found" : user.username %>
+                    <%= user.username %>
                   </div>
                   <div class="exp">
                     <div class="exp-medal">
@@ -138,8 +139,9 @@
             </div>
           </div>
           <% counter++ %>
-          <% } %>
-          <% }) %>
+          <%      } %>
+          <%    } %>
+          <%  }) %>
           <% } %>
         </div>
       </div>

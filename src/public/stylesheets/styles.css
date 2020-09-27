@@ -183,7 +183,7 @@ template {
     --white: #fff;
 }
 
-/* todo: comments */
+/* Defaults */
 
 * {
     box-sizing: border-box;
@@ -210,6 +210,8 @@ ul li {
     display: inline;
     list-style-type: none;
 }
+
+/* Snow effects */
 
 #sky {
     position: absolute;
@@ -902,14 +904,14 @@ ul li {
 
 /* Command Collapsible */
 
-.highlightme {
+.highlight-me {
     background-color: var(--discord-gray-dark);
     padding: 2px 7px;
     border-radius: 10px;
     white-space: nowrap;
 }
 
-.highlightme.light {
+.highlight-me.light {
     background-color: var(--discord-gray-highlight);
 }
 
@@ -1243,9 +1245,24 @@ a.commands-button-active {
     font-size: 30px;
     left: -20px;
     top: 15px;
+    animation: linear infinite alternate;
+    animation-name: wiggle;
+    animation-duration: 3s;
     -webkit-animation: linear infinite alternate;
     -webkit-animation-name: wiggle;
     -webkit-animation-duration: 3s;
+}
+
+@keyframes wiggle {
+    0% {
+        left: -20px;
+    }
+    50% {
+        left: -10px;
+    }
+    100% {
+        left: -20px;
+    }
 }
 
 @-webkit-keyframes wiggle {
@@ -1584,7 +1601,7 @@ a.button {
     grid-template-columns: 45% 10% 45%;
 }
 
-#moderate_guilds h3, #moderate_guilds p {
+#moderate-guilds h3, #moderate-guilds p {
     text-align: center;
 }
 
@@ -3190,11 +3207,11 @@ input:checked+.slider.small:before {
     margin-left: 10px;
 }
 
-.add_form_field {
+.add-form-field {
     margin: 10px auto;
 }
 
-.add_form_field:hover {
+.add-form-field:hover {
     cursor: pointer;
 }
 
@@ -3313,11 +3330,11 @@ input[type=number] {
 
 /* Best of Image & Livestream */
 
-#tc option, #tc_list option, #livestream_ping_role option {
+#tc option, #tc-list option, #livestream-ping-role option {
     color: var(--white);
 }
 
-#tc option:first-child, #tc_list option:first-child, #livestream_ping_role option:first-child {
+#tc option:first-child, #tc-list option:first-child, #livestream-ping-role option:first-child {
     color: var(--gray);
 }
 
@@ -3334,11 +3351,11 @@ textarea {
     margin: 20px auto;
 }
 
-#level_speed {
+#level-speed {
     width: 100%;
 }
 
-#scale_display {
+#scale-display {
     text-align: center;
 }
 
@@ -3948,15 +3965,15 @@ img.emoji {
     width: 100%;
 }
 
-#normal_msg {
+#normal-msg {
     display: block;
 }
 
-#embed_msg {
+#embed-msg {
     display: none;
 }
 
-.tab_cc {
+.tab-cc {
     margin: 30px 0;
     display: grid;
     grid-template-columns: 50% auto;
@@ -3964,7 +3981,7 @@ img.emoji {
     box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.4);
 }
 
-.tablinks_cc {
+.tablinks-cc {
     padding: 20px;
     border-bottom: 2px solid var(--discord-gray);
     text-align: center;
@@ -3972,12 +3989,12 @@ img.emoji {
     transition: 0.3s;
 }
 
-.tablinks_cc:hover {
+.tablinks-cc:hover {
     color: var(--white);
     cursor: pointer;
 }
 
-.active_cc {
+.active-cc {
     background-color: var(--discord-gray-highlight);
     border-bottom: 2px solid var(--discord-blue);
     color: var(--white)
@@ -3987,12 +4004,12 @@ img.emoji {
     padding: 50px 0;
 }
 
-#normal_msg_wrapper {
+#normal-msg-wrapper {
     width: 75%;
     margin: auto;
 }
 
-#normal_msg_desc {
+#normal-msg-desc {
     width: 100%;
     background-color: var(--discord-gray-light);
     color: var(--white);
@@ -4003,11 +4020,11 @@ img.emoji {
     padding: 10px;
 }
 
-#normal_msg_desc:focus {
+#normal-msg-desc:focus {
     outline: none;
 }
 
-.cc_msg {
+.cc-msg {
     margin-top: 20px;
     width: 100%;
     padding: 0 20px;
@@ -4018,7 +4035,7 @@ img.emoji {
     border-bottom: 1px solid var(--discord-gray-verylight);
 }
 
-.cc_invoke {
+.cc-invoke {
     line-height: 60px;
     font-size: 20px;
     font-weight: bold;
@@ -4026,7 +4043,7 @@ img.emoji {
     margin-right: 20px;
 }
 
-.cc_msg_type {
+.cc-msg-type {
     height: 40px;
     line-height: 40px;
     background-color: var(--discord-gray-dark);
@@ -4036,11 +4053,11 @@ img.emoji {
     text-align: center;
 }
 
-#cc_amount_wrapper {
+#cc-amount-wrapper {
     position: relative;
 }
 
-#cc_amount {
+#cc-amount {
     position: absolute;
     top: -40px;
     left: 0;
@@ -4109,10 +4126,6 @@ img.emoji {
     text-align: center;
 }
 
-#server-amount-wrapper {
-    /* width: 30%; */
-}
-
 /* TABLET MEDIA QUERY */
 
 @media screen and (max-width: 950px) {
@@ -4121,7 +4134,7 @@ img.emoji {
         grid-template-columns: repeat(1, 1fr);
     }
     /* CC */
-    .cc_msg {
+    .cc-msg {
         grid-template-columns: auto 100px 105px;
     }
     /* CC, Embed, ReactionRole */

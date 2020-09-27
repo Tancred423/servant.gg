@@ -2,168 +2,149 @@ const router = require('express').Router();
 const mysql = require('../database/mysql')
 const cookieParser = require('cookie-parser');
 
+// Global functions
+const functions = require('../public/scripts/functions');
+const nws = functions.nws;
+const isLoggedIn = functions.isLoggedIn;
+const getCurrentGuildId1 = functions.getCurrentGuildId1;
+const findGuildById = functions.findGuildById;
+const getAuthorization = functions.getAuthorization;
+
 router.use(cookieParser());
 
 module.exports = function (bot) {
-    function isAuthorized(req, res, next) {
-        if (req.user)
-            next();
-        else {
-            res.cookie('redirect', req.originalUrl)
-            res.redirect('/auth');
-        }
-    }
+    ////////////////////////////////////////////
+    // Routes
+    ////////////////////////////////////////////
 
-    function getAuthorization(req, id, mysql, bot, callback) {
-        let botUser = bot.users.cache.get(req.user.discordId);
-        let botGuild = bot.guilds.cache.get(id);
-        let is_authorized = false;
+    // Leaderboard
+    router.get('/', isLoggedIn, (req, res) => {
+        showLeaderboard(req, res);
+    });
 
-        if (botGuild !== undefined) {
-            // Owner?
-            let isOwner = botGuild.ownerID == req.user.discordId;
+    // Guild leaderboard
+    router.get('*', isLoggedIn, (req, res) => {
+        showGuildLeaderboard(req, res);
+    });
 
-            // Admin?
-            let isAdmin = false;
-            let member = undefined;
+    ////////////////////////////////////////////
+    // Async show-functions
+    ////////////////////////////////////////////
 
-            if (botGuild !== undefined && botUser !== undefined) {
-                member = botGuild.member(botUser);
-                isAdmin = member.hasPermission("ADMINISTRATOR");
-            }
+    async function showLeaderboard(req, res) {
+        try {
+            // Disabled plugins
+            let lvlDisabledGuilds = [];
 
-            // Servant-Moderator?
-            let isServantMod = false;
+            let sql = nws`SELECT *
+                FROM guild_disabled_plugins
+                WHERE plugin_id=${mysql.escape(7)}`; // level
 
-            let sql = "SELECT * " +
-                "FROM guild_mod_roles " +
-                "WHERE guild_id=" + mysql.escape(id);
+            let disabledPlugins = await mysql.query(sql);
+            disabledPlugins = disabledPlugins[0];
 
-            mysql.query(sql, function (err, modRoleIdEntries) {
-                if (err) {
-                    console.log(err);
-                    callback(false);
-                } else {
-                    modRoleIdEntries.forEach(modRoleIdEntry => {
-                        if (member.roles.cache.get(modRoleIdEntry.role_id) !== undefined)
-                            isServantMod = true;
-                    });
-
-                    // Authorized?
-                    if (isOwner || isAdmin || isServantMod) is_authorized = true;
-
-                    return callback(is_authorized);
-                }
+            disabledPlugins.forEach(disabledPlugin => {
+                lvlDisabledGuilds.push(disabledPlugin.guild_id);
             });
-        } else callback(is_authorized);
+
+            // Guilds
+            let allGuilds = [];
+
+            sql = nws`SELECT guild_id
+                FROM guilds`;
+
+            let guilds = await mysql.query(sql);
+            guilds = guilds[0];
+
+            guilds.forEach(guild => {
+                allGuilds.push(guild.guild_id);
+            });
+
+            // Disabled categories
+            let lvlDisabledModeration = [];
+
+            sql = nws`SELECT *
+                FROM guild_disabled_categories
+                WHERE category_id=${mysql.escape(3)}`; // moderation
+
+            let disabledCategories = await mysql.query(sql);
+            disabledCategories = disabledCategories[0];
+
+            disabledCategories.forEach(disabledCategory => {
+                lvlDisabledModeration.push(disabledCategory.guild_id);
+            });
+
+            res.render('leaderboard', { req, bot, lvlDisabledGuilds, allGuilds, lvlDisabledModeration });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
     }
 
-    router.get('/', isAuthorized, (req, res) => {
-        var lvlDisabledGuilds = [];
-        var allGuilds = [];
-        var lvlDisabledModeration = [];
-
-        var sql = "SELECT * FROM guild_disabled_plugins WHERE plugin_id=" + mysql.escape(7);
-        mysql.query(sql, function (err, result_lvl) {
-            if (err) res.render('404', { req });
-            else {
-                for (let i = 0; i < result_lvl.length; i++) {
-                    lvlDisabledGuilds.push(result_lvl[i].guild_id);
-                }
-
-                sql = "SELECT guild_id FROM guilds";
-
-                mysql.query(sql, function (err, result_guilds) {
-                    if (err) res.render('404', { req });
-                    else {
-                        for (let i = 0; i < result_guilds.length; i++) {
-                            allGuilds.push(result_guilds[i].guild_id);
-                        }
-
-                        sql = "SELECT * " +
-                            "FROM guild_disabled_categories " +
-                            "WHERE category_id=" + mysql.escape(3)
-
-                        mysql.query(sql, function (err, disabled_categories) {
-                            if (err) res.render('404', { req });
-                            else {
-                                for (let i = 0; i < disabled_categories.length; i++) {
-                                    lvlDisabledModeration.push(disabled_categories[i].guild_id);
-                                }
-
-                                res.render('leaderboard', {
-                                    req, bot, lvlDisabledGuilds, allGuilds, lvlDisabledModeration
-                                });
-                            }
-                        });
-                    }
-                });
+    async function showGuildLeaderboard(req, res) {
+        try {
+            let id = await getCurrentGuildId1(req);
+            let guild = findGuildById(req.user.guilds, id);
+            let botGuild;
+            try {
+                botGuild = await bot.guilds.fetch(id);
+            } catch (err) {
+                res.render('404', { req });
+                return
             }
-        });
-    });
 
-    router.get('*', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 1].split("?")[0];
+            // Guild was found & Servant is on this guild
+            if (guild && botGuild) {
+                // Disabled plugins
+                let levelIsDisabled = false;
 
-        var guilds = req.user.guilds;
-        let guildFound = false;
+                let sql = nws`SELECT *
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(7)}`; // level
 
-        guilds.forEach(guild => {
-            if (guild.id === id && id !== '264445053596991498') {
-                guildFound = true;
-                var botIsOnGuild = false;
-                if (bot.guilds.cache.get(guild.id) !== undefined) botIsOnGuild = true;
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
 
-                if (botIsOnGuild) {
-                    var levelIsDisabled = false;
-                    var guildHasEntry = false;
+                if (disabledPlugins.length > 0) levelIsDisabled = true;
 
-                    var sql = "SELECT * FROM guild_disabled_plugins WHERE guild_id=" + mysql.escape(guild.id) + " AND plugin_id='7'";
-                    mysql.query(sql, function (err, result_lvl) {
-                        if (err) res.render('404', { req });
-                        else {
-                            if (result_lvl.length > 0) levelIsDisabled = true;
+                // Guilds
+                let guildHasEntry = false;
 
-                            sql = "SELECT guild_id FROM guilds WHERE guild_id=" + mysql.escape(guild.id);
+                sql = nws`SELECT guild_id
+                    FROM guilds
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, result_guilds) {
-                                if (err) res.render('404', { req });
-                                else {
-                                    if (result_guilds.length > 0) guildHasEntry = true;
+                let guilds = await mysql.query(sql);
+                guilds = guilds[0];
 
-                                    if (!levelIsDisabled && guildHasEntry) {
-                                        sql = "SELECT user_id, exp " +
-                                            "FROM user_exp " +
-                                            "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                            "ORDER BY exp DESC";
+                if (guilds.length > 0) guildHasEntry = true;
 
-                                        mysql.query(sql, function (err, exps) {
-                                            if (err) { console.log(err); res.render('404', { req }); }
-                                            else {
-                                                getAuthorization(req, id, mysql, bot, function (isAuthorized) {
-                                                    let botGuild = bot.guilds.cache.get(id);
-                                                    res.render('guild_leaderboard', { req, guild, exps, botGuild, isAuthorized, bot });
-                                                });
-                                            }
-                                        });
-                                    } else {
-                                        res.render('404', { req });
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    res.render('404', { req });
-                }
-            }
-        });
+                // Level is enabled && guild has DB entry (because it's off by default)
+                if (!levelIsDisabled && guildHasEntry) {
+                    // Exps
+                    sql = nws`SELECT user_id, exp
+                        FROM user_exp
+                        WHERE guild_id=${mysql.escape(guild.id)}
+                        ORDER BY exp DESC`;
 
-        if (!guildFound) {
-            res.render('404', { req });
+                    let exps = await mysql.query(sql);
+                    exps = exps[0];
+
+                    // Is authorized (to delete entries)
+                    let isAuthorized = await getAuthorization(bot, req, id, mysql, bot);
+
+                    // Guild object from client
+                    let botGuild = bot.guilds.cache.get(id);
+
+                    res.render('guild_leaderboard', { req, guild, exps, botGuild, isAuthorized, bot });
+                } else res.render('404', { req });
+            } else res.render('404', { req });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
         }
-    });
+    }
 
     return router;
 };

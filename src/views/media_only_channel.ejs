@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Media-only Channel</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Media-only Channel">
@@ -27,19 +27,14 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Media-only Channel">
 <meta property="twitter:description" content="Media-only channels with no conversations allowed!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
-<% var plugin = 'checked'; %>
-<% if (disabled_plugins[0]) { %>
-<% plugin = '';  %>
-<% } %>
-
-<% var moc_warning = 'checked'; %>
-<% if (disabled_features[0]) { %>
-<% moc_warning = ''; %>
-<% } %>
+<% 
+const plugin = disabledPlugins[0] ? '' : 'checked';
+const mocWarning = disabledFeatures[0] ? '' : 'checked';
+%>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -58,10 +53,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Media-only Channel Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'mediaonlychannel')" <%= plugin %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'mediaonlychannel')" <%= plugin %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -87,7 +82,7 @@
                     </div>
                 </div>
                 <div class="padding-top padding-bottom padding-left padding-right">
-                    <form action="/submit/mediaonlychannel" method="POST" id="form_mediaonlychannel">
+                    <form action="/submit/media-only-channel" method="POST" id="form-moc">
                         <div class="settings-disclaimer">
                             <div class="command-panel-moc">
                                 <span class="cpm-left">
@@ -95,7 +90,7 @@
                                     <div class="cpm-left-bottom">Upon deleting a message, Servant will post a warning that will be deleted after 30 seconds.</div>
                                 </span>
                                 <label class="switch">
-                                    <input name="moc_warning" id="moc_warning" type="checkbox" onclick="submit_mediaonlychannel();" <%= moc_warning %>>
+                                    <input name="moc-warning" id="moc-warning" type="checkbox" onclick="submitMediaOnlyChannel();" <%= mocWarning %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -110,26 +105,24 @@
                             <br />
                             <span class="multiple-select-label">Media-only Channels</span>
 
-                            <select onchange="submit_mediaonlychannel();" id="moc_channels" name="moc_channels" data-placeholder="Select text channels..." multiple class="chosen-select">
+                            <select onchange="submitMediaOnlyChannel();" id="moc-channels" name="moc-channels" data-placeholder="Select text channels..." multiple class="chosen-select">
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
-
-                                <% let selected = ""; %>
-                                <% mediaonlychannels.forEach(moc => { %>
-                                <% if (moc.tc_id === channel.id) { %>
-                                <% selected = "selected"; %>
-                                <% } %>
-                                <% }); %>
-
+                                <%     if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
+                                <%     let selected = ""; %>
+                                <%     mediaonlychannels.forEach(moc => { %>
+                                <%          if (moc.tc_id === channel.id) { %>
+                                <%             selected = "selected"; %>
+                                <%         } %>
+                                <%     }); %>
                                 <option value="<%= channel.id %>" <%= selected %>>
                                     #<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %>
                                 </option>
-                                <% } %>
+                                <%     } %>
                                 <% }); %>
                             </select>
                         </div>
                         <!-- to include it in url params -->
-                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                        <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                     </form>
                 </div>
             </div>

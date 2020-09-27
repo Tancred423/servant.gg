@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Livestream</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Livestream">
@@ -27,32 +27,21 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Livestream">
 <meta property="twitter:description" content="Easy livestream management without Twitch login!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
 <script>
-    var botRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
+    var globalBotRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
 </script>
 
 <% 
-var plugin = 'checked';
-if (disabled_plugins[0]) {
-    plugin = ''; 
-}
-
-let public_mode = 'checked';
-let live_role_id = 0;
-let ping_role_id = 0;
-let tc_id = 0;
-let announcement = '';
-if (guild_livestreams.length > 0) {
-    if (!guild_livestreams[0].is_public) public_mode = '';
-    live_role_id = guild_livestreams[0].role_id;
-    ping_role_id = guild_livestreams[0].ping_role_id;
-    tc_id = guild_livestreams[0].tc_id;
-    announcement = guild_livestreams[0].announcement;
-}
+const plugin = disabledPlugins[0] ? '' : 'checked';
+const publicMode =  guildLivestreams.length > 0 ? (guildLivestreams[0].is_public ? 'checked' : '') : 'checked';
+const liveRoleId = guildLivestreams.length > 0 ? guildLivestreams[0].role_id : 0;
+const pingRoleId = guildLivestreams.length > 0 ? guildLivestreams[0].ping_role_id : 0;
+const tcId = guildLivestreams.length > 0 ? guildLivestreams[0].tc_id : 0;
+const announcement = guildLivestreams.length > 0 ? guildLivestreams[0].announcement : '';
 %>
 
 <div class="main-wrapper">
@@ -72,10 +61,10 @@ if (guild_livestreams.length > 0) {
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Livestream Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'livestream')" <%= plugin %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'livestream')" <%= plugin %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -101,13 +90,13 @@ if (guild_livestreams.length > 0) {
                     </div>
                 </div>
 
-                <form action="/submit/livestream" method="POST" id="form_livestream">
+                <form action="/submit/livestream" method="POST" id="form-livestream">
                     <div class="livestream settings-disclaimer">
                         <div>If toggled on, every member will receive the "live"-role upon going live.</div>
                         <div class="command-panel">
                             <span>Public Mode</span>
                             <label class="switch">
-                                <input name="livestream-public" id="livestream-public" type="checkbox" onclick="submit_livestream();" <%= public_mode %>>
+                                <input name="livestream-public" id="livestream-public" type="checkbox" onclick="submitLivestream();" <%= publicMode %>>
                                 <span class="slider round"></span>
                             </label>
                         </div>
@@ -117,24 +106,20 @@ if (guild_livestreams.length > 0) {
                         <div>Members with one of these roles are "streamers". Upon going live, the streamer will receive the "live"-role and an announcement will be posted.</div>
                         <br /><br />
                         <div class="form-group">
-                            <select onchange="handle_livestream_select();" id="livestream-roles" name="livestream-roles" data-placeholder="Select roles..." multiple class="chosen-select">
-
+                            <select onchange="handleLivestreamSelect();" id="livestream-roles" name="livestream-roles" data-placeholder="Select roles..." multiple class="chosen-select">
                                 <% botGuild.roles.cache.forEach(role => { %>
-
-                                <% let selected = ""; %>
-                                <% guild_livestreamers.forEach(streamer_role => { %>
-                                <% if (streamer_role.role_id === role.id) { %>
-                                <% selected = "selected"; %>
-                                <% } %>
-                                <% }); %>
-
-                                <%      if (role.name !== "@everyone") { %>
+                                <%     let selected = ""; %>
+                                <%     guildLivestreamers.forEach(streamerRole => { %>
+                                <%         if (streamerRole.role_id === role.id) { %>
+                                <%             selected = "selected"; %>
+                                <%         } %>
+                                <%     }); %>
+                                <%     if (role.name !== "@everyone") { %>
                                 <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= selected %>><%= role.name %></option>
-                                <%      } %>
+                                <%     } %>
                                 <% }); %>
-
                             </select>
-                            <label for="level_speed" class="control-label level">Streamer Roles</label><i class="bar"></i>
+                            <label for="level-speed" class="control-label level">Streamer Roles</label><i class="bar"></i>
                         </div>
                     </div>
 
@@ -143,15 +128,13 @@ if (guild_livestreams.length > 0) {
                         <br />
                         <br />
                         <div class="form-group">
-                            <select onchange="submit_livestream();" id="livestream-role" name="livestream-role">
-
+                            <select onchange="submitLivestream();" id="livestream-role" name="livestream-role">
                                 <% botGuild.roles.cache.forEach(role => { %>
-                                <%      if (role.name !== "@everyone") { %>
-                                <%          let live_role_sel = live_role_id == role.id ? 'selected' : ''; %>
-                                <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= live_role_sel %>><%= role.name %></option>
-                                <%      } %>
+                                <%     if (role.name !== "@everyone") { %>
+                                <%         let liveRoleSel = liveRoleId == role.id ? 'selected' : ''; %>
+                                <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= liveRoleSel %>><%= role.name %></option>
+                                <%     } %>
                                 <% }); %>
-
                             </select>
                             <label for="livestream-role" class="control-label level">Live Role</label><i class="bar"></i>
                         </div>
@@ -161,14 +144,14 @@ if (guild_livestreams.length > 0) {
                         <div>This is the text channel the announcement will be posted in.</div>
                         <br />
                         <div class="form-group embed">
-                            <select id="tc" name="tc" onchange="changeTcSel(this); submit_livestream();" required>
-                                <% let tc_default_selected = tc_id == 0 ? 'selected' : ''; %>
-                                <option value="0" <%= tc_default_selected %>>No text channel (Announcement disabled)</option>
+                            <select id="tc" name="tc" onchange="changeTcSel(this); submitLivestream();" required>
+                                <% const tcDefaultSelected = tcId == 0 ? 'selected' : ''; %>
+                                <option value="0" <%= tcDefaultSelected %>>No text channel (Announcement disabled)</option>
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
-                                <% let tc_selected = tc_id == channel.id ? 'selected' : ''; %>
-                                <option value="<%= channel.id %>" <%= tc_selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                                <% } %>
+                                <%     if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
+                                <%         const tcSelected = tcId == channel.id ? 'selected' : ''; %>
+                                <option value="<%= channel.id %>" <%= tcSelected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
+                                <%     } %>
                                 <% }); %>
                             </select>
                             <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
@@ -180,22 +163,20 @@ if (guild_livestreams.length > 0) {
                         <br />
                         <br />
                         <div class="form-group">
-                            <select onchange="changeTcSel(this); submit_livestream();" id="livestream_ping_role" name="livestream_ping_role">
-                                <% let ping_role_id_selected = ping_role_id == 0 ? 'selected' : ''; %>
-                                <option value="0" <%= ping_role_id_selected %>>No role (Announcement without ping)</option>
-
+                            <select onchange="changeTcSel(this); submitLivestream();" id="livestream-ping-role" name="livestream-ping-role">
+                                <% const pingRoleIdSelected = pingRoleId == 0 ? 'selected' : ''; %>
+                                <option value="0" <%= pingRoleIdSelected %>>No role (Announcement without ping)</option>
                                 <% botGuild.roles.cache.forEach(role => { %>
-                                <%          let ping_role_sel = ping_role_id == role.id ? 'selected' : ''; %>
-                                <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= ping_role_sel %>><%= role.name %></option>
+                                <%     let pingRoleSel = pingRoleId == role.id ? 'selected' : ''; %>
+                                <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= pingRoleSel %>><%= role.name %></option>
                                 <% }); %>
-
                             </select>
-                            <label for="livestream_ping_role" class="control-label level">Ping Role</label><i class="bar"></i>
+                            <label for="livestream-ping-role" class="control-label level">Ping Role</label><i class="bar"></i>
                         </div>
                     </div>
 
                     <!-- to include it in url params -->
-                    <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                    <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                 </form>
             </div>
         </div>

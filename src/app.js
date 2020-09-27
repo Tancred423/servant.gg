@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 const mysql = require('./database/mysql');
 const { Client } = require('discord.js');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
 // Discord.JS
 var bot = new Client();
@@ -82,48 +83,47 @@ app.get('/donate', (req, res) => {
 
 app.get('/statistics', (req, res) => {
     // Get the json from Servant
-    let jsonUnsorted;
-    try {
-        jsonUnsorted = require(process.env.PATH_TO_SERVER_LOG);
-    } catch (err) {
-        res.render('404', { req });
-        return;
-    }
+    fs.readFile(process.env.PATH_TO_SERVER_LOG, 'utf8', function (err, json) {
+        if (err) res.render('404', { req });
+        else {
+            const jsonUnsorted = JSON.parse(json);
 
-    // Cut the keys so they only show the date
-    // Duplicate keys will be eliminated automatically
-    const jsonSubstring = {};
+            // Cut the keys so they only show the date
+            // Duplicate keys will be eliminated automatically
+            const jsonSubstring = {};
 
-    Object.keys(jsonUnsorted).forEach((key) => {
-        const keyCut = key.substring(0, 10);
-        const value = jsonUnsorted[key];
+            Object.keys(jsonUnsorted).forEach((key) => {
+                const keyCut = key.substring(0, 10);
+                const value = jsonUnsorted[key];
 
-        jsonSubstring[keyCut] = value;
-    });
+                jsonSubstring[keyCut] = value;
+            });
 
-    // Sort the object by key (chronologically)
-    const jsonSorted = {};
+            // Sort the object by key (chronologically)
+            const jsonSorted = {};
 
-    Object.keys(jsonSubstring).sort().forEach((key) => {
-        const value = jsonSubstring[key];
+            Object.keys(jsonSubstring).sort().forEach((key) => {
+                const value = jsonSubstring[key];
 
-        jsonSorted[key] = value;
-    });
+                jsonSorted[key] = value;
+            });
 
-    // Convert object to required arrays 'labels' and 'data'
-    const labels = [];
-    const data = [];
+            // Convert object to required arrays 'labels' and 'data'
+            const labels = [];
+            const data = [];
 
-    Object.keys(jsonSorted).forEach((key) => {
-        const value = jsonSorted[key];
+            Object.keys(jsonSorted).forEach((key) => {
+                const value = jsonSorted[key];
 
-        if (value > 0) {
-            labels.push(key);
-            data.push(value);
+                if (value > 0) {
+                    labels.push(key);
+                    data.push(value);
+                }
+            });
+
+            res.render('statistics', { req, labels, data });
         }
     });
-
-    res.render('statistics', { req, labels, data });
 });
 
 //The 404 Route (ALWAYS Keep this as the last route)

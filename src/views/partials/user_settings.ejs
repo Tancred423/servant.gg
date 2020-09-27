@@ -23,94 +23,94 @@
         </div>
 
 
-        <form action="/submit/user" method="POST" id="form_us">
+        <form action="/submit/user" method="POST" id="form-us">
             <% let prefix = ''; %>
             <% let bio = ''; %>
             <% let language = '0'; %>
             <% let color = '#7289da'; %>
             <% let birthday; %>
-            <% let profile_bg_id; %>
+            <% let profileBgId; %>
 
-            <% if (result.length > 0) { %>
-            <% prefix = result[0].prefix; %>
-            <% bio = result[0].bio; %>
-            <% language = result[0].code %>
-            <% color = result[0].color_code; %>
-            <% birthday = result[0].birthday; %>
-            <% profile_bg_id = result[0].profile_bg_id; %>
+            <% if (userData.length > 0) { %>
+            <% prefix = userData[0].prefix; %>
+            <% bio = userData[0].bio; %>
+            <% language = userData[0].code %>
+            <% color = userData[0].color_code; %>
+            <% birthday = userData[0].birthday; %>
+            <% profileBgId = userData[0].profile_bg_id; %>
             <% } %>
 
-            <% let bg_1; %>
-            <% let bg_2; %>
-            <% let bg_3; %>
-            <% let bg_4; %>
-            <% let bg_5; %>
-            <% let bg_6; %>
-            <% let bg_7; %>
-            <% let bg_8; %>
-            <% let bg_9; %>
+            <% let bg1; %>
+            <% let bg2; %>
+            <% let bg3; %>
+            <% let bg4; %>
+            <% let bg5; %>
+            <% let bg6; %>
+            <% let bg7; %>
+            <% let bg8; %>
+            <% let bg9; %>
 
             <% 
-            if (profile_bg_id == 0 || profile_bg_id == 1) { 
-                bg_1 = 'checked';
-            } else if (profile_bg_id == 2) {
-                bg_2 = 'checked'; 
-            } else if (profile_bg_id == 3) {
-                bg_3 = 'checked'; 
-            } else if (profile_bg_id == 4) {
-                bg_4 = 'checked'; 
-            } else if (profile_bg_id == 5) {
-                 bg_5 = 'checked'; 
-            } else if (profile_bg_id == 6) {
-                bg_6 = 'checked'; 
-            } else if (profile_bg_id == 7) {
-                bg_7 = 'checked'; 
-            } else if (profile_bg_id == 8) {
-                bg_8 = 'checked';
-            } else if (profile_bg_id == 9) {
-                bg_8 = 'checked';
+            if (profileBgId == 0 || profileBgId == 1) { 
+                bg1 = 'checked';
+            } else if (profileBgId == 2) {
+                bg2 = 'checked'; 
+            } else if (profileBgId == 3) {
+                bg3 = 'checked'; 
+            } else if (profileBgId == 4) {
+                bg4 = 'checked'; 
+            } else if (profileBgId == 5) {
+                 bg5 = 'checked'; 
+            } else if (profileBgId == 6) {
+                bg6 = 'checked'; 
+            } else if (profileBgId == 7) {
+                bg7 = 'checked'; 
+            } else if (profileBgId == 8) {
+                bg8 = 'checked';
+            } else if (profileBgId == 9) {
+                bg8 = 'checked';
             }
             %>
 
-            <% let bg_url_1; %>
-            <% let bg_url_2; %>
-            <% let bg_url_3; %>
-            <% let bg_url_4; %>
-            <% let bg_url_5; %>
-            <% let bg_url_6; %>
-            <% let bg_url_7; %>
-            <% let bg_url_8; %>
-            <% let bg_url_9; %>
+            <% let bgUrl1; %>
+            <% let bgUrl2; %>
+            <% let bgUrl3; %>
+            <% let bgUrl4; %>
+            <% let bgUrl5; %>
+            <% let bgUrl6; %>
+            <% let bgUrl7; %>
+            <% let bgUrl8; %>
+            <% let bgUrl9; %>
 
             <% 
-            bgs.forEach(bg => {
+            backgrounds.forEach(bg => {
                 switch (bg.id) {
                     case 1:
-                        bg_url_1 = bg.image_url;
+                        bgUrl1 = bg.image_url;
                     break;
                     case 2:
-                        bg_url_2 = bg.image_url;
+                        bgUrl2 = bg.image_url;
                     break;
                     case 3:
-                        bg_url_3 = bg.image_url;
+                        bgUrl3 = bg.image_url;
                     break;
                     case 4:
-                        bg_url_4 = bg.image_url;
+                        bgUrl4 = bg.image_url;
                     break;
                     case 5:
-                        bg_url_5 = bg.image_url;
+                        bgUrl5 = bg.image_url;
                     break;
                     case 6:
-                        bg_url_6 = bg.image_url;
+                        bgUrl6 = bg.image_url;
                     break;
                     case 7:
-                        bg_url_7 = bg.image_url;
+                        bgUrl7 = bg.image_url;
                     break;
                     case 8:
-                        bg_url_8 = bg.image_url;
+                        bgUrl8 = bg.image_url;
                     break;
                     case 9:
-                        bg_url_9 = bg.image_url;
+                        bgUrl9 = bg.image_url;
                     break;
                 
                     default:
@@ -130,18 +130,18 @@
                     </div>
                     <br />
                     <div class="form-group">
-                        <input onkeyup="setRequired(this);" id="prefix_us" name="prefix_us" type="text" maxlength="5" value="<%= prefix %>" <%= required %> />
-                        <label for="prefix_us" class="control-label">Prefix (Default: !)</label><i class="bar"></i>
+                        <input onkeyup="setRequired(this);" id="prefix-us" name="prefix-us" type="text" maxlength="5" value="<%= prefix %>" <%= required %> />
+                        <label for="prefix-us" class="control-label">Prefix (Default: !)</label><i class="bar"></i>
                     </div>
 
                     <div class="form-group">
-                        <select id="language_us" name="language_us">
+                        <select id="language-us" name="language-us">
                             <% for (var i = 0; i < languages.length; i++) { %>
                             <% var selected = language == '0' ? (languages[i].code == 'en_gb' ? 'selected' : '') : (language == languages[i].code ? "selected" : ""); %>
                             <option value="<%= languages[i].code %>" <%= selected %>><%= languages[i].name %></option>
                             <% } %>
                         </select>
-                        <label for="language_us" class="control-label">Language</label><i class="bar"></i>
+                        <label for="language-us" class="control-label">Language</label><i class="bar"></i>
                     </div>
                 </div>
 
@@ -153,36 +153,36 @@
                     The birthday will affect birthday lists and gratulations.
 
                     <div class="button-container">
-                        <button onclick="submit_bday_clear();" id="birthday-clear" name="birthday-clear" type="button" class="btn-redirect empty small"><span>Clear birthday</span></button>
+                        <button onclick="submitUsBdayClear();" id="birthday-clear" name="birthday-clear" type="button" class="btn-redirect empty small"><span>Clear birthday</span></button>
                     </div>
 
                     <br />
 
                     <div class="form-group">
-                        <input onchange="submit_bday()" id="birthday" name="birthday" type="date" value="<%= birthday != '0000-00-00' ? birthday : '' %>" required />
+                        <input onchange="submitBday()" id="birthday" name="birthday" type="date" value="<%= birthday != '0000-00-00' ? birthday : '' %>" required />
                         <label for="birthday" class="control-label">Birthday</label><i class="bar"></i>
                     </div>
                     <div>Select servers that are allowed to see your birthday.</div>
 
                     <span class="multiple-select-label">Birthday Servers</span>
 
-                    <select onchange="submit_bday_guilds();" id="bday-guilds" name="bday-guilds" data-placeholder="Select servers..." multiple class="chosen-select" name="test">
+                    <select onchange="submitBdayGuilds();" id="bday-guilds" name="bday-guilds" data-placeholder="Select servers..." multiple class="chosen-select" name="test">
                         <% let guilds = req.user.guilds; %>
                         <% guilds.forEach(guild => { %>
 
-                        <% let server_icon_url = 'images/no_user.png'; %>
+                        <% let serverIconUrl = 'images/no_user.png'; %>
                         <% if (guild.icon !== null) { %>
-                        <% server_icon_url = "https://cdn.discordapp.com/icons/" + guild.id + "/" + guild.icon + ".png"; %>
+                        <% serverIconUrl = "https://cdn.discordapp.com/icons/" + guild.id + "/" + guild.icon + ".png"; %>
                         <% } %>
 
                         <% let selected = ""; %>
-                        <% bday_guilds.forEach(bday_guild => { %>
-                        <% if (bday_guild.guild_id === guild.id) { %>
+                        <% birthdayGuilds.forEach(bdayGuild => { %>
+                        <% if (bdayGuild.guild_id === guild.id) { %>
                         <% selected = "selected"; %>
                         <% } %>
                         <% }); %>
 
-                        <option data-img-src="<%= server_icon_url %>" value="<%= guild.id %>" <%= selected %>>
+                        <option data-img-src="<%= serverIconUrl %>" value="<%= guild.id %>" <%= selected %>>
                             <%= guild.name %>
                         </option>
                         <% }); %>
@@ -221,7 +221,7 @@
                         The embed colour will affect all messages by Servant with "embed links".
 
                         <div class="button-container">
-                            <button onclick="submit_color_clear();" id="color-clear" name="color-clear" type="button" class="btn-redirect empty small" <%= disabled %>><span>Reset colour</span></button>
+                            <button onclick="submitUsColorClear();" id="color-clear" name="color-clear" type="button" class="btn-redirect empty small" <%= disabled %>><span>Reset colour</span></button>
                         </div>
 
                         <div class="form-group color">
@@ -233,7 +233,7 @@
                     <div class="settings-disclaimer">
                         The background image will affect your profile on every server.
                         <div class="button-container">
-                            <button onclick="submit_bg_clear();" id="bg-clear" name="bg-clear" type="button" class="btn-redirect empty small" <%= disabled %>><span>Reset image</span></button>
+                            <button onclick="submitUsBgClear();" id="bg-clear" name="bg-clear" type="button" class="btn-redirect empty small" <%= disabled %>><span>Reset image</span></button>
                         </div>
                         <br />
                         <div class="multiple-select-label">Background images</div>
@@ -242,48 +242,48 @@
 
                         <div class="profile-bg-images">
                             <label>
-                                <input type="radio" id="bg_1" name="bg" value="1" <%= bg_1 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_1 %>">
+                                <input type="radio" id="bg-1" name="bg" value="1" <%= bg1 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl1 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_2" name="bg" value="2" <%= bg_2 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_2 %>">
+                                <input type="radio" id="bg-2" name="bg" value="2" <%= bg2 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl2 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_3" name="bg" value="3" <%= bg_3 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_3 %>">
+                                <input type="radio" id="bg-3" name="bg" value="3" <%= bg3 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl3 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_4" name="bg" value="4" <%= bg_4 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_4 %>">
+                                <input type="radio" id="bg-4" name="bg" value="4" <%= bg4 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl4 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_5" name="bg" value="5" <%= bg_5 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_5 %>">
+                                <input type="radio" id="bg-5" name="bg" value="5" <%= bg5 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl5 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_6" name="bg" value="6" <%= bg_6 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_6 %>">
+                                <input type="radio" id="bg-6" name="bg" value="6" <%= bg6 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl6 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_7" name="bg" value="7" <%= bg_7 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_7 %>">
+                                <input type="radio" id="bg-7" name="bg" value="7" <%= bg7 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl7 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_8" name="bg" value="8" <%= bg_8 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_8 %>">
+                                <input type="radio" id="bg-8" name="bg" value="8" <%= bg8 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl8 %>">
                             </label>
 
                             <label>
-                                <input type="radio" id="bg_9" name="bg" value="9" <%= bg_8 %> <%= disabled %> onclick="submit_us();">
-                                <img src="<%= bg_url_9 %>">
+                                <input type="radio" id="bg-9" name="bg" value="9" <%= bg8 %> <%= disabled %> onclick="submitUs();">
+                                <img src="<%= bgUrl9 %>">
                             </label>
                         </div>
                     </div>

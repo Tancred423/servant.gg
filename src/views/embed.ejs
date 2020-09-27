@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Embed</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Embed">
@@ -27,9 +27,9 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Embed">
 <meta property="twitter:description" content="Post a custom embed message!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
 <div class="main-wrapper">
   <div class="dash-wrapper">
@@ -47,7 +47,7 @@
     </div>
     <div class="main-content">
       <div class="padding-top padding-bottom padding-left padding-right embed-padding">
-        <form action="/submit/embed" method="POST" id="form_embed">
+        <form action="/submit/embed" method="POST" id="form-embed">
           <div id="dismissible-item-success" data-component="dismissible-item" data-type="success" data-value="Embed was sent successfully."></div>
           <div id="dismissible-item-error" data-component="dismissible-item" data-type="error" data-value="Something went wrong."></div>
           <div id="dismissible-item-error-permission" data-component="dismissible-item" data-type="error" data-value="I cannot write in that text channel."></div>
@@ -66,9 +66,9 @@
                   <select id="tc" name="tc" onchange="changeTcSel(this);" required>
                     <option value="" selected disabled>Please select a text channel</option>
                     <% botGuild.channels.cache.forEach(channel => { %>
-                    <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
+                    <%   if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
                     <option value="<%= channel.id %>">#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                    <% } %>
+                    <%   } %>
                     <% }); %>
                   </select>
                   <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
@@ -97,7 +97,7 @@
               <% } %>
 
               <div id="color-picker-wrapper-create">
-                <% let color = color_code[0] == undefined ? "#7289da" : color_code[0].color_code; %>
+                <% let color = colorCode[0] == undefined ? "#7289da" : colorCode[0].color_code; %>
                 <input name="color-picker" type="color" value="<%= color %>" id="color-picker-create" <%= disabled %>>
               </div>
 
@@ -108,44 +108,44 @@
             <div class="embed-content">
               <div class="embed-author-wrapper-create">
                 <div class="embed-author">
-                  <input class="btn-redirect empty" type="button" id="add-embed-author-create" name="add-embed-author" value="+ Author" onclick="add_author_create(this);" />
+                  <input class="btn-redirect empty" type="button" id="add-embed-author-create" name="add-embed-author" value="+ Author" onclick="addAuthorCreate(this);" />
                 </div>
               </div>
 
               <div class="embed-thumbnail-wrapper-create">
                 <div class="embed-thumbnail">
-                  <input class="btn-redirect empty" type="button" id="add-thumbnail-create" name="add-thumbnail" value="+ Thumbnail" onclick="add_thumb_create(this);" />
+                  <input class="btn-redirect empty" type="button" id="add-thumbnail-create" name="add-thumbnail" value="+ Thumbnail" onclick="addThumbCreate(this);" />
                 </div>
               </div>
 
               <div class="embed-title-wrapper-create">
                 <div class="embed-title">
-                  <input class="btn-redirect empty" type="button" id="add-embed-title-create" name="add-embed-title" value="+ Title" onclick="add_title_create(this);" />
+                  <input class="btn-redirect empty" type="button" id="add-embed-title-create" name="add-embed-title" value="+ Title" onclick="addTitleCreate(this);" />
                 </div>
               </div>
 
               <div class="embed-description-wrapper-create">
                 <div class="embed-description">
-                  <input class="btn-redirect empty" type="button" id="add-embed-description-create" name="add-embed-description" value="+ Description" onclick="add_description_create(this);" />
+                  <input class="btn-redirect empty" type="button" id="add-embed-description-create" name="add-embed-description" value="+ Description" onclick="addDescriptionCreate(this);" />
                 </div>
               </div>
 
               <div class="add-buttons">
-                <div class="btn-redirect empty rr" id="add-inline-field-create" name="add-inline-field" onclick="add_field_inline_create();">+ Inline Field</div>
-                <div class="btn-redirect empty rr" id="add-non-inline-field-create" name="add-non-inline-field" onclick="add_field_non_inline_create();">+ Non-inline Field</div>
+                <div class="btn-redirect empty rr" id="add-inline-field-create" name="add-inline-field" onclick="addFieldInlineCreate();">+ Inline Field</div>
+                <div class="btn-redirect empty rr" id="add-non-inline-field-create" name="add-non-inline-field" onclick="addFieldNonInlineCreate();">+ Non-inline Field</div>
               </div>
               <div id="embed-fields-create"></div>
 
               <div class="embed-image-wrapper-create">
                 <div class="embed-image">
-                  <input class="btn-redirect empty" type="button" id="add-image-create" name="add-image" value="+ Image" onclick="add_img_create(this);" />
+                  <input class="btn-redirect empty" type="button" id="add-image-create" name="add-image" value="+ Image" onclick="addImgCreate(this);" />
                 </div>
               </div>
 
               <div class="embed-complete-footer-wrapper-create">
                 <div class="embed-footer-wrapper-create">
                   <div class="embed-footer">
-                    <input class="btn-redirect empty" type="button" id="add-embed-footer-create" name="add-embed-footer" value="+ Footer" onclick="add_footer_create(this);" />
+                    <input class="btn-redirect empty" type="button" id="add-embed-footer-create" name="add-embed-footer" value="+ Footer" onclick="addFooterCreate(this);" />
                   </div>
                 </div>
 
@@ -153,7 +153,7 @@
 
                 <div class="embed-timestamp-wrapper-create">
                   <div class="embed-timestamp">
-                    <input class="btn-redirect empty" type="button" id="add-embed-timestamp-create" name="add-embed-timestamp" value="+ Timestamp" onclick="add_timestamp_create(this);" />
+                    <input class="btn-redirect empty" type="button" id="add-embed-timestamp-create" name="add-embed-timestamp" value="+ Timestamp" onclick="addTimestampCreate(this);" />
                   </div>
                 </div>
               </div>
@@ -161,10 +161,9 @@
           </div>
 
           <!-- to include it in url params -->
-          <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+          <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
 
           <div class="center-button">
-            <!-- <div class="btn-redirect" onclick="submit_embed()">Send Embed</div> -->
             <button type="submit" class="btn-redirect center-button">Send Embed</button>
           </div>
         </form>

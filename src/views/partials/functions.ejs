@@ -1,9 +1,9 @@
 <%
 getLevelFromExp = function(exp) {
-    let remaining_exp = exp;
+    let remainingExp = exp;
     let level = 0;
-    while (remaining_exp >= getLevelExp(level)) {
-        remaining_exp -= getLevelExp(level);
+    while (remainingExp >= getLevelExp(level)) {
+        remainingExp -= getLevelExp(level);
         level++;
     }
     return level;

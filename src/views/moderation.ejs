@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation">
@@ -27,14 +27,11 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation">
 <meta property="twitter:description" content="Toggle moderation commands and use plugins!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
-<% var moderation = 'checked'; %>
-<% if (disabled_categories[0]) { %>
-<% moderation = '';  %>
-<% } %>
+<% const moderation = disabledCategories[0] ? '' : 'checked'; %>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -53,10 +50,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update category toggle."></div>
+                    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Couldn't update category toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Moderation Category</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'moderation')" <%= moderation %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitCategories(this, 'moderation')" <%= moderation %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -65,33 +62,33 @@
         <div class="com-sub-featured">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <h2>Commands</h2>
-                <div id="dismissible-item-com" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update command toggle."></div>
+                <div id="dismissible-item-com" data-component="dismissible-item" data-type="error" data-value="Couldn't update command toggle."></div>
                 <% 
 				let checked;
                 for (let i = 0; i < commands.length; i++) {
                     checked = 'checked';
                     const command = commands[i];
-                    if (disabled_commands !== undefined) {
-                        for (let j = 0; j < disabled_commands.length; j++) {
-                            const dis_command = disabled_commands[j];
-                            if (dis_command.command_id === command.id) {
+                    if (disabledCommands !== undefined) {
+                        for (let j = 0; j < disabledCommands.length; j++) {
+                            const disabledCommand = disabledCommands[j];
+                            if (disabledCommand.command_id === command.id) {
                                 checked = '';
                             }
                         }
                     }
-                    %>
+                %>
 
                 <div class="command-panel">
                     <span><%= prefix %><%= command.name %></span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_commands(this, '<%= command.name %>')" <%= checked %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitCommands(this, '<%= command.name %>')" <%= checked %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
                 <% } %>
 
                 <h2>Plugins</h2>
-                <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                 <%
                 let autorole = 'checked';
                 let bestofimage = 'checked';
@@ -105,8 +102,8 @@
                 let voicelobby = 'checked';
                 let birthday = 'checked';
                 let customcommands = 'checked';
-                for (let i = 0; i < disabled_plugins.length; i++) {
-                    const plugin = disabled_plugins[i];
+                for (let i = 0; i < disabledPlugins.length; i++) {
+                    const plugin = disabledPlugins[i];
                     if (plugin.name === 'autorole') autorole = '';
                     else if (plugin.name === 'bestofimage') bestofimage = '';
                     else if (plugin.name === 'bestofquote') bestofquote = '';
@@ -122,14 +119,14 @@
                 }
                 %>
                 <div class="plugins">
-                    <a href="/dashboard/<%= guild.id %>/moderation/autorole" class="plugin-panel">
+                    <a href="/dashboard/<%= guild.id %>/moderation/auto-role" class="plugin-panel">
                         <div class="title">
                             <div class="text">
                                 Auto Role
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'autorole')" <%= autorole %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'autorole')" <%= autorole %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -140,14 +137,14 @@
                             <div class="bullet"><i class="fas fa-clock"></i> Optional delays</div>
                         </div>
                     </a>
-                    <a href="/dashboard/<%= guild.id %>/moderation/bestofimage" class="plugin-panel">
+                    <a href="/dashboard/<%= guild.id %>/moderation/best-of-image" class="plugin-panel">
                         <div class="title">
                             <div class="text">
                                 Best of Image
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'bestofimage')" <%= bestofimage %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'bestofimage')" <%= bestofimage %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -158,14 +155,14 @@
                             <div class="bullet"><i class="fas fa-check-circle"></i> Fully customizable settings</div>
                         </div>
                     </a>
-                    <a href="/dashboard/<%= guild.id %>/moderation/bestofquote" class="plugin-panel">
+                    <a href="/dashboard/<%= guild.id %>/moderation/best-of-quote" class="plugin-panel">
                         <div class="title">
                             <div class="text">
                                 Best of Quote
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'bestofquote')" <%= bestofquote %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'bestofquote')" <%= bestofquote %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -183,7 +180,7 @@
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'birthday')" <%= birthday %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'birthday')" <%= birthday %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -194,14 +191,14 @@
                             <div class="bullet"><i class="fas fa-bullhorn"></i> Birthday announcements</div>
                         </div>
                     </a>
-                    <a href="/dashboard/<%= guild.id %>/moderation/customcommands" class="plugin-panel">
+                    <a href="/dashboard/<%= guild.id %>/moderation/custom-commands" class="plugin-panel">
                         <div class="title">
                             <div class="text">
                                 Custom Commands
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'customcommands')" <%= customcommands %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'customcommands')" <%= customcommands %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -231,7 +228,7 @@
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'join')" <%= join %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'join')" <%= join %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -248,7 +245,7 @@
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'leave')" <%= leave %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'leave')" <%= leave %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -266,7 +263,7 @@
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'level')" <%= levelToggle %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'level')" <%= levelToggle %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -284,7 +281,7 @@
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'livestream')" <%= livestream %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'livestream')" <%= livestream %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -303,7 +300,7 @@
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'log')" <%= log %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'log')" <%= log %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -314,14 +311,14 @@
                             <div class="bullet"><i class="fas fa-trash"></i> Track deleted messages</div>
                         </div>
                     </a>
-                    <a href="/dashboard/<%= guild.id %>/moderation/mediaonlychannel" class="plugin-panel">
+                    <a href="/dashboard/<%= guild.id %>/moderation/media-only-channel" class="plugin-panel">
                         <div class="title">
                             <div class="text">
                                 Media-only Channel
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'mediaonlychannel')" <%= mediaonlychannel %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'mediaonlychannel')" <%= mediaonlychannel %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -332,14 +329,14 @@
                             <div class="bullet"><i class="fas fa-trash"></i> Other messages will be deleted</div>
                         </div>
                     </a>
-                    <a href="/dashboard/<%= guild.id %>/moderation/reactionrole" class="plugin-panel">
+                    <a href="/dashboard/<%= guild.id %>/moderation/reaction-role" class="plugin-panel">
                         <div class="title">
                             <div class="text">
                                 Reaction Role
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'reactionrole')" <%= reactionrole %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'reactionrole')" <%= reactionrole %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
@@ -350,14 +347,14 @@
                             <div class="bullet"><i class="fas fa-check-square"></i> Let members agree to the rules</div>
                         </div>
                     </a>
-                    <a href="/dashboard/<%= guild.id %>/moderation/voicelobby" class="plugin-panel">
+                    <a href="/dashboard/<%= guild.id %>/moderation/voice-lobby" class="plugin-panel">
                         <div class="title">
                             <div class="text">
                                 Voice Lobby
                             </div>
                             <div class="switch">
                                 <label class="switch">
-                                    <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'voicelobby')" <%= voicelobby %>>
+                                    <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'voicelobby')" <%= voicelobby %>>
                                     <span class="slider round"></span>
                                 </label>
                             </div>

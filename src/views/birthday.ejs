@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Birthday</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Birthday">
@@ -27,24 +27,15 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Birthday">
 <meta property="twitter:description" content="Birthday lists and announcements!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
 <% 
-var plugin = 'checked';
-if (disabled_plugins[0]) {
-    plugin = ''; 
-}
-
-let servant_bday = 'checked';
-let announcement_tc_id = 0;
-let list_tc_id = 0;
-if (guild_birthdays.length > 0) {
-    if (!guild_birthdays[0].servant_bday) servant_bday = '';
-    announcement_tc_id = guild_birthdays[0].announcement_tc_id;
-    list_tc_id = guild_birthdays[0].list_tc_id;
-}
+const plugin = disabledPlugins[0] ? '' : 'checked';
+const servantBday = guildBirthdays.length > 0 && !guildBirthdays[0].servant_bday ? '' : 'checked';
+const announcementTcId = guildBirthdays.length > 0 ? guildBirthdays[0].announcement_tc_id : 0;
+const listTcId = guildBirthdays.length > 0 ? guildBirthdays[0].list_tc_id : 0;
 %>
 
 <div class="main-wrapper">
@@ -64,10 +55,10 @@ if (guild_birthdays.length > 0) {
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Birthday Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'birthday')" <%= plugin %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'birthday')" <%= plugin %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -93,13 +84,13 @@ if (guild_birthdays.length > 0) {
                     </div>
                 </div>
 
-                <form action="/submit/birthday" method="POST" id="form_birthday">
+                <form action="/submit/birthday" method="POST" id="form-birthday">
                     <div class="birthday settings-disclaimer">
                         <div>Include Servant's birthday in the list.</div>
                         <div class="command-panel">
                             <span>Servant's Birthday</span>
                             <label class="switch">
-                                <input name="birthday-servant" id="birthday-servant" type="checkbox" onclick="submit_birthday();" <%= servant_bday %>>
+                                <input name="birthday-servant" id="birthday-servant" type="checkbox" onclick="submitBirthday();" <%= servantBday %>>
                                 <span class="slider round"></span>
                             </label>
                         </div>
@@ -109,15 +100,15 @@ if (guild_birthdays.length > 0) {
                         <div>This is the text channel the announcement will be posted in.</div>
                         <br />
                         <div class="form-group embed">
-                            <select id="tc" name="tc" onchange="changeTcSel(this); submit_birthday();" required>
-                                <% let tc_default_selected = announcement_tc_id == 0 ? 'selected' : ''; %>
-                                <option value="0" <%= tc_default_selected %>>No text channel (Announcement disabled)</option>
+                            <select id="tc" name="tc" onchange="changeTcSel(this); submitBirthday();" required>
+                                <% const tcDefaultSelected = announcementTcId == 0 ? 'selected' : ''; %>
+                                <option value="0" <%= tcDefaultSelected %>>No text channel (Announcement disabled)</option>
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
-                                <% let tc_selected = announcement_tc_id == channel.id ? 'selected' : ''; %>
-                                <option value="<%= channel.id %>" <%= tc_selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                                <% } %>
-                                <% }); %>
+                                <%     if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
+                                <%         const tcSelected = announcementTcId == channel.id ? 'selected' : '';  %>
+                                <option value="<%= channel.id %>" <%= tcSelected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
+                                <%     } %>
+                                <% });  %>
                             </select>
                             <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
                         </div>
@@ -127,22 +118,22 @@ if (guild_birthdays.length > 0) {
                         <div>This is the text channel the list will be posted in.<br />As soon as you change the text channel, the list will be posted (or deleted).</div>
                         <br />
                         <div class="form-group embed">
-                            <select id="tc_list" name="tc_list" onchange="changeTcSel(this); submit_birthday();" required>
-                                <% let tc_default_selected_list = list_tc_id == 0 ? 'selected' : ''; %>
-                                <option value="0" <%= tc_default_selected_list %>>No text channel (List disabled)</option>
+                            <select id="tc-list" name="tc-list" onchange="changeTcSel(this); submitBirthday();" required>
+                                <% const tcDefaultSelectedList = listTcId == 0 ? 'selected' : ''; %>
+                                <option value="0" <%= tcDefaultSelectedList %>>No text channel (List disabled)</option>
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
-                                <% let tc_selected = list_tc_id == channel.id ? 'selected' : ''; %>
-                                <option value="<%= channel.id %>" <%= tc_selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                                <% } %>
+                                <%     if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
+                                <%         const tcSelected = listTcId == channel.id ? 'selected' : ''; %>
+                                <option value="<%= channel.id %>" <%= tcSelected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
+                                <%     } %>
                                 <% }); %>
                             </select>
-                            <label for="tc_list" class="control-label">Text Channel</label><i class="bar"></i>
+                            <label for="tc-list" class="control-label">Text Channel</label><i class="bar"></i>
                         </div>
                     </div>
 
                     <!-- to include it in url params -->
-                    <input type="hidden" id="guild_user_id" name="guild_user_id" value="<%= guild.id %>|<%= req.user.discordId %>" />
+                    <input type="hidden" id="guild-user-id" name="guild-user-id" value="<%= guild.id %>|<%= req.user.discordId %>" />
                 </form>
             </div>
         </div>

@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Leave</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Leave">
@@ -27,33 +27,17 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Leave">
 <meta property="twitter:description" content="Let users vote for the best images on your server!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
-<% var plugin = 'checked'; %>
-<% if (disabled_plugins[0]) { %>
-<% plugin = '';  %>
-<% } %>
-
-<% let leave_message; %>
-<% let tc_id; %>
-
-<% let leave; %>
-<% if (leaves.length > 0) { %>
-<% leave = leaves[0]; %>
-<% } %>
-
-<% if (leave !== undefined) { %>
-<% leave_message = leave.msg; %>
-<% tc_id = leave.tc_id; %>
-<% } else { %>
-<% leave_message = 'We are sorry to see you go!'; %>
-<% tc_id = '0'; %>
-<% } %>
-
-<% let leave_msg_req = ''; %>
-<% if (leave_message) leave_msg_req = 'required'; %>
+<% 
+const plugin = disabledPlugins[0] = '' : 'checked';
+const leave = leaves.length > 0 ? leaves[0] : undefined;
+const leaveMessage = leave ? leave.msg : 'We are sorry to see you go!';
+const tcId = leave ? leave.tc_id : '0';
+const leaveMsgReq = leaveMessage ? 'required' : '';
+%>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -72,10 +56,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Leave Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'leave')" <%= plugin %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'leave')" <%= plugin %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -101,41 +85,34 @@
                     </div>
                 </div>
                 <div class="padding-top padding-bottom padding-left padding-right">
-                    <form action="/submit/leave" method="POST" id="form_leave">
+                    <form action="/submit/leave" method="POST" id="form-leave">
                         <div class="settings-disclaimer">
                             <div>A custom message for leaving members.</div>
                             <br />
                             <div class="form-group">
-                                <textarea onkeyup="setRequired(this);handle_leave_msg(this);" id="leave_msg" name="leave_msg" maxlength="2048" <%= leave_msg_req %>><%= leave_message %></textarea>
-                                <label for="leave_msg" class="control-label">Farewell Message</label><i class="bar"></i>
+                                <textarea onkeyup="setRequired(this); handleLeaveMsg(this);" id="leave-msg" name="leave-msg" maxlength="2048" <%= leaveMsgReq %>><%= leaveMessage %></textarea>
+                                <label for="leave-msg" class="control-label">Farewell Message</label><i class="bar"></i>
                             </div>
                         </div>
                         <div class="settings-disclaimer">
                             <div>This is the text channel the farewell messages will be posted in.</div>
                             <br />
                             <div class="form-group">
-                                <% let default_selected = ''; %>
-                                <% if (tc_id === '0') { %>
-                                <% default_selected = 'selected'; %>
-                                <% } %>
-
-                                <select id="tc" name="tc" onchange="changeTcSel(this);submit_leave();">
-                                    <option value="0" <%= default_selected %>>No text channel</option>
+                                <% const defaultSelected = tcId === '0' ? 'selected' : ''; %>
+                                <select id="tc" name="tc" onchange="changeTcSel(this); submitLeave();">
+                                    <option value="0" <%= defaultSelected %>>No text channel</option>
                                     <% botGuild.channels.cache.forEach(channel => { %>
-                                    <% if (channel.type === 'text' || channel.type === 'news') { %>
-                                    <% let selected = '' %>
-                                    <% if (channel.id === tc_id) { %>
-                                    <% selected = 'selected'; %>
-                                    <% } %>
+                                    <%     if (channel.type === 'text' || channel.type === 'news') { %>
+                                    <%         let selected = channel.id === tcId ? 'selected' : ''; %>
                                     <option value="<%= channel.id %>" <%= selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                                    <% } %>
+                                    <%     } %>
                                     <% }); %>
                                 </select>
                                 <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
                             </div>
                         </div>
                         <!-- to include it in url params -->
-                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                        <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                     </form>
                 </div>
             </div>

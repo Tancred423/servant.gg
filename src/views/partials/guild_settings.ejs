@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <form action="/submit/guild" method="POST" id="form_gs">
+    <form action="/submit/guild-settings" method="POST" id="form-gs">
         <% var prefix = ''; %>
         <% var language = '0'; %>
         <% var tz = '1'; %>
@@ -34,12 +34,12 @@
         <% } %>
 
         <% if (guilds.length > 0) { %>
-        <% for (var i = 0; i < disabled_features.length; i++) { %>
-        <% if (disabled_features[i].feature_id === 1) achievements = ''; %>
-        <% if (disabled_features[i].feature_id === 2) eastereggs = ''; %>
-        <% if (disabled_features[i].feature_id === 3) leveling = ''; %>
-        <% if (disabled_features[i].feature_id === 4) cmddeletion = ''; %>
-        <% if (disabled_features[i].feature_id === 5) moc = ''; %>
+        <% for (var i = 0; i < disabledFeatures.length; i++) { %>
+        <% if (disabledFeatures[i].feature_id === 1) achievements = ''; %>
+        <% if (disabledFeatures[i].feature_id === 2) eastereggs = ''; %>
+        <% if (disabledFeatures[i].feature_id === 3) leveling = ''; %>
+        <% if (disabledFeatures[i].feature_id === 4) cmddeletion = ''; %>
+        <% if (disabledFeatures[i].feature_id === 5) moc = ''; %>
         <% } %>
 
         <% if (achievements == null) achievements = 'checked'; %>
@@ -63,18 +63,18 @@
                     <div>The prefix and language will affect all members on your server.</div>
                     <br />
                     <div class="form-group">
-                        <input onkeyup="setRequired(this);" id="prefix_gs" name="prefix_gs" type="text" maxlength="5" value="<%= prefix %>" <%= required %> />
-                        <label for="prefix_gs" class="control-label">Prefix (Default: !)</label><i class="bar"></i>
+                        <input onkeyup="setRequired(this);" id="prefix-gs" name="prefix-gs" type="text" maxlength="5" value="<%= prefix %>" <%= required %> />
+                        <label for="prefix-gs" class="control-label">Prefix (Default: !)</label><i class="bar"></i>
                     </div>
 
                     <div class="form-group">
-                        <select id="language_gs" name="language_gs">
+                        <select id="language-gs" name="language-gs">
                             <% for (var i = 0; i < languages.length; i++) { %>
                             <% var selected = language == '0' ? (languages[i].code == 'en_gb' ? 'selected' : '') : (language == languages[i].code ? "selected" : ""); %>
                             <option value="<%= languages[i].code %>" <%= selected %>><%= languages[i].name %></option>
                             <% } %>
                         </select>
-                        <label for="language_gs" class="control-label">Language</label><i class="bar"></i>
+                        <label for="language-gs" class="control-label">Language</label><i class="bar"></i>
                     </div>
                 </div>
 
@@ -100,12 +100,12 @@
                     <br />
                     <span class="multiple-select-label">Servant-Moderator Roles</span>
 
-                    <select onchange="submit_mod_roles();" id="mod_roles" name="mod_roles" data-placeholder="Select roles..." multiple class="chosen-select">
+                    <select onchange="submitModRoles();" id="mod-roles" name="mod-roles" data-placeholder="Select roles..." multiple class="chosen-select">
                         <% botGuild.roles.cache.forEach(role => { %>
 
                         <% let selected = ""; %>
-                        <% mod_roles.forEach(mod_role => { %>
-                        <% if (mod_role.role_id === role.id) { %>
+                        <% modRoles.forEach(modRole => { %>
+                        <% if (modRole.role_id === role.id) { %>
                         <% selected = "selected"; %>
                         <% } %>
                         <% }); %>
@@ -127,7 +127,7 @@
                     <span>Achievements</span>
                     <div class="right">
                         <label class="switch small">
-                            <input id="achievements" name="achievements" type="checkbox" <%= achievements %> onclick="submit_gs();">
+                            <input id="achievements" name="achievements" type="checkbox" <%= achievements %> onclick="submitGs();">
                             <span class="slider round small"></span>
                         </label>
                     </div>
@@ -137,7 +137,7 @@
                     <span>Command deletion</span>
                     <div class="right">
                         <label class="switch small">
-                            <input id="cmddeletion" name="cmddeletion" type="checkbox" <%= cmddeletion %> onclick="submit_gs();">
+                            <input id="cmddeletion" name="cmddeletion" type="checkbox" <%= cmddeletion %> onclick="submitGs();">
                             <span class="slider round small"></span>
                         </label>
                     </div>
@@ -147,7 +147,7 @@
                     <span>Easter eggs</span>
                     <div class="right">
                         <label class="switch small">
-                            <input id="eastereggs" name="eastereggs" type="checkbox" <%= eastereggs %> onclick="submit_gs();">
+                            <input id="eastereggs" name="eastereggs" type="checkbox" <%= eastereggs %> onclick="submitGs();">
                             <span class="slider round small"></span>
                         </label>
                     </div>
@@ -156,6 +156,6 @@
         </div>
 
         <!-- to include it in url params -->
-        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+        <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
     </form>
 </div>

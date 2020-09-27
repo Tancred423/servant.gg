@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Interaction</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Interaction">
@@ -27,14 +27,11 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Interaction">
 <meta property="twitter:description" content="Toggle interaction commands!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
-<% var interaction = 'checked'; %>
-<% if (disabled_categories[0]) { %>
-<% interaction = '';  %>
-<% } %>
+<% const interaction = disabledCategories[0] ? '' : 'checked'; %>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -53,10 +50,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update category toggle."></div>
+                    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Couldn't update category toggle."></div>
                     <span><i class="far fa-comments"></i> Interaction Category</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'interaction')" <%= interaction %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitCategories(this, 'interaction')" <%= interaction %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -65,24 +62,26 @@
         <div class="com-sub-featured">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <h2>Commands</h2>
-                <div id="dismissible-item-com" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update command toggle."></div>
+                <div id="dismissible-item-com" data-component="dismissible-item" data-type="error" data-value="Couldn't update command toggle."></div>
+
                 <% let checked; %>
                 <% for (let i = 0; i < commands.length; i++) { %>
-                <% checked = 'checked'; %>
-                <% const command = commands[i]; %>
-                <% if (disabled_commands !== undefined) { %>
-                <% for (let j = 0; j < disabled_commands.length; j++) { %>
-                <% const dis_command = disabled_commands[j]; %>
-                <% if (dis_command.command_id === command.id) { %>
-                <% checked = ''; %>
-                <% } %>
-                <% } %>
-                <% } %>
+                <%     checked = 'checked'; %>
+                <%     const command = commands[i]; %>
+                <%     if (disabledCommands) { %>
+                <%         for (let j = 0; j < disabledCommands.length; j++) { %>
+                <%             const disabledCommand = disabledCommands[j]; %>
+                <%             if (disabledCommand.command_id === command.id) { %>
+                <%                 checked = '';  %>
+                <%             } %>
+                <%         } %>
+                <%     } %>
+
 
                 <div class="command-panel">
                     <span><%= prefix %><%= command.name %></span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_commands(this, '<%= command.name %>')" <%= checked %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitCommands(this, '<%= command.name %>')" <%= checked %>>
                         <span class="slider round"></span>
                     </label>
                 </div>

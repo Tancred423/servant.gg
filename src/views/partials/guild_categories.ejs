@@ -4,20 +4,20 @@
 <% var interaction = 'checked'; %>
 <% var random = 'checked'; %>
 
-<% for (var i = 0; i < disabled_categories.length; i++) {  %>
-<% if (disabled_categories[i].category_id === 3) { %>
+<% for (var i = 0; i < disabledCategories.length; i++) {  %>
+<% if (disabledCategories[i].category_id === 3) { %>
 <% mod = ''; %>
 <% } %>
-<% if (disabled_categories[i].category_id === 4) { %>
+<% if (disabledCategories[i].category_id === 4) { %>
 <% utility = ''; %>
 <% } %>
-<% if (disabled_categories[i].category_id === 5) { %>
+<% if (disabledCategories[i].category_id === 5) { %>
 <% fun = '';  %>
 <% } %>
-<% if (disabled_categories[i].category_id === 6) { %>
+<% if (disabledCategories[i].category_id === 6) { %>
 <% interaction = '';  %>
 <% } %>
-<% if (disabled_categories[i].category_id === 7) { %>
+<% if (disabledCategories[i].category_id === 7) { %>
 <% random = '';  %>
 <% } %>
 <% } %>
@@ -25,12 +25,12 @@
 <div id="server-settings">
     <h3>Moderate Categories</h3>
     <p>Click on a category to moderate its plugins & commands</p>
-    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update category toggles."></div>
+    <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Couldn't update category toggles."></div>
     <a href="/dashboard/<%= guild.id %>/moderation" class="dashboard-button-cat">
         <span><i class="fas fa-user-cog"></i> Moderation</span>
         <div class="right">
             <label class="switch">
-                <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'moderation')" <%= mod %>>
+                <input name="<%= guild.id %>" type="checkbox" onclick="submitCategories(this, 'moderation')" <%= mod %>>
                 <span class="slider round"></span>
             </label>
         </div>
@@ -40,7 +40,7 @@
         <span><i class="far fa-lightbulb"></i> Utility</span>
         <div class="right">
             <label class="switch">
-                <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'utility')" <%= utility %>>
+                <input name="<%= guild.id %>" type="checkbox" onclick="submitCategories(this, 'utility')" <%= utility %>>
                 <span class="slider round"></span>
             </label>
         </div>
@@ -50,7 +50,7 @@
         <span><i class="fas fa-volleyball-ball"></i> Fun</span>
         <div class="right">
             <label class="switch">
-                <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'fun')" <%= fun %>>
+                <input name="<%= guild.id %>" type="checkbox" onclick="submitCategories(this, 'fun')" <%= fun %>>
                 <span class="slider round"></span>
             </label>
         </div>
@@ -60,7 +60,7 @@
         <span><i class="far fa-comments"></i> Interaction</span>
         <div class="right">
             <label class="switch">
-                <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'interaction')" <%= interaction %>>
+                <input name="<%= guild.id %>" type="checkbox" onclick="submitCategories(this, 'interaction')" <%= interaction %>>
                 <span class="slider round"></span>
             </label>
         </div>
@@ -70,7 +70,7 @@
         <span><i class="fas fa-dice"></i> Random</span>
         <div class="right">
             <label class="switch">
-                <input name="<%= guild.id %>" type="checkbox" onclick="submit_categories(this, 'random')" <%= random %>>
+                <input name="<%= guild.id %>" type="checkbox" onclick="submitCategories(this, 'random')" <%= random %>>
                 <span class="slider round"></span>
             </label>
         </div>

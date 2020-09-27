@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Best of Image</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Best of Image">
@@ -27,49 +27,20 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Best of Image">
 <meta property="twitter:description" content="Let users vote for the best images on your server!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
-<script>
-    var bois = <%- JSON.stringify(bois) %>;
-</script>
-
-<% var plugin = 'checked'; %>
-<% if (disabled_plugins[0]) { %>
-<% plugin = '';  %>
-<% } %>
-
-
-<% let percentage; %>
-<% let flat; %>
-<% let tc_id; %>
-<% let emoji; %>
-
-<% let boi; %>
-<% if (bois.length > 0) { %>
-<% boi = bois[0]; %>
-<% } %>
-
-<% if (boi !== undefined) { %>
-<% percentage = boi.min_votes_percent; %>
-<% flat = boi.min_votes_flat; %>
-<% tc_id = boi.tc_id; %>
-<% emoji = boi.emoji; %>
-<% } else { %>
-<% percentage = ''; %>
-<% flat = ''; %>
-<% tc_id = '0'; %>
-<% emoji = '⭐'; %>
-<% } %>
-<% if (percentage == 0) percentage = ''; %>
-<% if (flat == 0) flat = ''; %>
-
-<% let percentage_req = ''; %>
-<% if (percentage) percentage_req = 'required'; %>
-
-<% let flat_req = ''; %>
-<% if (flat) flat_req = 'required'; %>
+<% 
+const plugin = disabledPlugins[0] ? '' : 'checked';
+const boi = bois.length > 0 ? bois[0] : undefined; 
+const percentage = boi ? (boi.min_votes_percent == 0 ? '' : boi.min_votes_percent) : ''; 
+const flat = boi ? (boi.min_botes_flat == 0 ? '' : boi.min_botes_flat) : ''; 
+const tcId = boi ? boi.tc_id : '0'; 
+const emoji = boi ? boi.emoji : '⭐';
+const percentageReq = percentage ? 'required' : '';
+const flatReq = flat ? 'required' : '';
+%>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -88,10 +59,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Best of Image Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'bestofimage')" <%= plugin %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'bestofimage')" <%= plugin %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -117,18 +88,18 @@
                     </div>
                 </div>
                 <div class="padding-top padding-bottom padding-left padding-right">
-                    <form action="/submit/bestofimage" method="POST" id="form_boi">
+                    <form action="/submit/best-of-image" method="POST" id="form-boi">
                         <div class="settings-disclaimer">
                             <div>This is the amount of people who have to vote.<br />
                                 E.g. 40% of the online people have to vote, but at least 10 people!
                             </div>
                             <br />
                             <div class="form-group">
-                                <input onkeyup="setRequired(this);handle_percentage_boi(this);" type="number" name="percentage" id="percentage" value="<%= percentage %>" <%= percentage_req %>>
+                                <input onkeyup="setRequired(this); handlePercentageBoi(this);" type="number" name="percentage" id="percentage" value="<%= percentage %>" <%= percentageReq %>>
                                 <label for="percentage" class="control-label">Percentage of online members</label><i class="bar"></i>
                             </div>
                             <div class="form-group">
-                                <input onkeyup="setRequired(this);handle_flat_boi(this)" type="number" name="flat" id="flat" value="<%= flat %>" <%= flat_req %>>
+                                <input onkeyup="setRequired(this);handleFlatBoi(this)" type="number" name="flat" id="flat" value="<%= flat %>" <%= flatReq %>>
                                 <label for="flat" class="control-label">Flat amout of members</label><i class="bar"></i>
                             </div>
                         </div>
@@ -136,21 +107,14 @@
                             <div>This is the text channel the best images will be posted in.</div>
                             <br />
                             <div class="form-group">
-                                <% let default_selected = ''; %>
-                                <% if (tc_id === '0') { %>
-                                <% default_selected = 'selected'; %>
-                                <% } %>
-
-                                <select id="tc" name="tc" onchange="changeTcSel(this);submit_bestofimage();">
-                                    <option value="0" <%= default_selected %>>No text channel</option>
+                                <% const defaultSelected = tcId === '0' ? 'selected' : ''; %>
+                                <select id="tc" name="tc" onchange="changeTcSel(this); submitBestOfImage();">
+                                    <option value="0" <%= defaultSelected %>>No text channel</option>
                                     <% botGuild.channels.cache.forEach(channel => { %>
-                                    <% if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
-                                    <% let selected = '' %>
-                                    <% if (channel.id === tc_id) { %>
-                                    <% selected = 'selected'; %>
-                                    <% } %>
+                                    <%     if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
+                                    <%         const selected = channel.id === tcId ? 'selected' : ''; %>
                                     <option value="<%= channel.id %>" <%= selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                                    <% } %>
+                                    <%     } %>
                                     <% }); %>
                                 </select>
                                 <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
@@ -160,12 +124,12 @@
                             <div>This is the emoji your members will vote with.</div>
                             <br />
                             <div class="form-group">
-                                <div class="picker" id="picker_0"><%= emoji %></div>
+                                <div class="picker" id="picker-0"><%= emoji %></div>
                                 <div class="picker-label">Emoji</div>
                             </div>
                         </div>
                         <!-- to include it in url params -->
-                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                        <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                     </form>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Level</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Level">
@@ -27,20 +27,18 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Level">
 <meta property="twitter:description" content="Adjust leveling speed and reward users with roles upon level up!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
 <script>
-    var botRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
+    var globalBotRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
 </script>
 
-<% let notification_checked = 'checked'; %>
-<% let modifier = '1.00'; %>
-<% if (guild_levels.length > 0) { %>
-<%     notification_checked = guild_levels[0].notification ? 'checked' : ''; %>
-<%     modifier = guild_levels[0].modifier; %>
-<% } %>
+<% 
+const notificationChecked = guildLevels.length > 0 ? (guildLevels[0].notification ? 'checked' : '') : 'checked';
+const modifier = guildLevels.length > 0 ? guildLevels[0].modifier : '1.00';
+%>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -59,10 +57,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Level Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'level')" <%= levelToggle %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'level')" <%= levelToggle %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -89,13 +87,13 @@
                     </div>
                 </div>
 
-                <form action="/submit/level" method="POST" id="form_level">
+                <form action="/submit/level" method="POST" id="form-level">
                     <br />
 
                     <div class="command-panel">
                         <span>Level-up notification</span>
                         <label class="switch">
-                            <input name="level-up-msg" id="level-up-msg" type="checkbox" onclick="submit_level()" <%= notification_checked %>>
+                            <input name="level-up-msg" id="level-up-msg" type="checkbox" onclick="submitLevel()" <%= notificationChecked %>>
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -105,10 +103,10 @@
                     <div class="leveling-speed settings-disclaimer">
                         <div>How fast should users gain exp?</div>
                         <br />
-                        <div id="scale_display"><%= parseFloat(modifier).toFixed(2) %>x <%= modifier == '1.00' ? ' (recommended)' : '' %></div>
+                        <div id="scale-display"><%= parseFloat(modifier).toFixed(2) %>x <%= modifier == '1.00' ? ' (recommended)' : '' %></div>
                         <div class="form-group">
-                            <input onchange="handle_level_speed();" required type="range" name="level_speed" id="level_speed" min="0.25" max="4.0" step="0.25" value="<%= modifier %>" oninput="level_scale(this);">
-                            <label for="level_speed" class="control-label level">Leveling Speed</label><i class="bar"></i>
+                            <input onchange="handleLevelSpeed();" required type="range" name="level-speed" id="level-speed" min="0.25" max="4.0" step="0.25" value="<%= modifier %>" oninput="levelScale(this);">
+                            <label for="level-speed" class="control-label level">Leveling Speed</label><i class="bar"></i>
                         </div>
                     </div>
 
@@ -118,49 +116,42 @@
                         <div>Reward users upon a level up with one or more roles. These can be used to climb higher in the member list or unlock channels.</div>
 
                         <br />
-                        <div class="btn-redirect empty center-button" onclick="add_level_role(this);">+ Add</div>
+                        <div class="btn-redirect empty center-button" onclick="addLevelRole();">+ Add</div>
                         <br />
 
-                        <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: You cannot set he same role twice."></div>
+                        <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="You cannot set he same role twice."></div>
 
                         <div id="level-roles">
-
-                            <% let my_level_roles = new Map(); %>
-
-                            <% level_roles.forEach(level_role => {  %>
-                            <% if (my_level_roles.has(level_role.level)) { %>
-                            <%     my_level_roles.set(level_role.level, my_level_roles.get(level_role.level) + '|' + level_role.role_id); %>
-                            <% } else { %>
-                            <%     my_level_roles.set(level_role.level, level_role.role_id); %>
-                            <% } %>
+                            <% let myLevelRoles = new Map(); %>
+                            <% levelRoles.forEach(levelRole => { %>
+                            <%     if (myLevelRoles.has(levelRole.level)) { %>
+                            <%         myLevelRoles.set(levelRole.level, myLevelRoles.get(levelRole.level) + '|' + levelRole.role_id); %>
+                            <%     } else { %>
+                            <%         myLevelRoles.set(levelRole.level, levelRole.role_id); %>
+                            <%     } %>
                             <% }); %>
-
-                            <% let i = 1; %>
-
-                            <% for (const [key, value] of my_level_roles) { %>
-                            <% let role_ids = value.split("|"); %>
+                            <% let i = 1;  %>
+                            <% for (const [key, value] of myLevelRoles) { %>
+                            <%     let roleIds = value.split("|"); %>
                             <div class="roles level">
-                                <span class="delete-level-role" onclick="delete_level_role(this)"><i class="fas fa-times-circle"></i></span>
-                                <input type="number" id="level_<%= i %>" name="level_<%= i %>" placeholder="Level" min="1" max="9999" onkeyup="handle_level(this)" value="<%= key == 0 ? "" : key %>">
-                                <select onchange="handle_level_select();" id="level_roles_<%= i %>" name="level_roles_<%= i %>" data-placeholder="Select roles..." multiple class="chosen-select">
-
+                                <span class="delete-level-role" onclick="deleteLevelRole(this)"><i class="fas fa-times-circle"></i></span>
+                                <input type="number" id="level-<%= i %>" name="level-<%= i %>" placeholder="Level" min="1" max="9999" onkeyup="handleLevel(this)" value="<%= key == 0 ? "" : key %>">
+                                <select onchange="handleLevelSelect();" id="level-roles-<%= i %>" name="level-roles-<%= i %>" data-placeholder="Select roles..." multiple class="chosen-select">
                                     <% botGuild.roles.cache.forEach(role => { %>
-                                    <%      if (role.name !== "@everyone") { %>
-                                    <%          let role_selected = role_ids.includes(role.id) ? 'selected' : ''; %>
-                                   
-                                    <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= role_selected %>><%= role.name %></option>
-                                    <%      } %>
+                                    <%     if (role.name !== "@everyone") { %>
+                                    <%         let roleSelected = roleIds.includes(role.id) ? 'selected' : ''; %>
+                                    <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= roleSelected %>><%= role.name %></option>
+                                    <%     } %>
                                     <% }); %>
-
                                 </select>
                             </div>
-                            <% i++; %>
+                            <%     i++; %>
                             <% }; %>
                         </div>
                     </div>
 
                     <!-- to include it in url params -->
-                    <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                    <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                 </form>
             </div>
 

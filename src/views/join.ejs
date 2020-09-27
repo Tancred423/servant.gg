@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Join</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Join">
@@ -27,33 +27,17 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Join">
 <meta property="twitter:description" content="Let users vote for the best images on your server!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
-<% var plugin = 'checked'; %>
-<% if (disabled_plugins[0]) { %>
-<% plugin = '';  %>
-<% } %>
-
-<% let join_message; %>
-<% let tc_id; %>
-
-<% let join; %>
-<% if (joins.length > 0) { %>
-<% join = joins[0]; %>
-<% } %>
-
-<% if (join !== undefined) { %>
-<% join_message = join.msg; %>
-<% tc_id = join.tc_id; %>
-<% } else { %>
-<% join_message = 'Enjoy your stay!'; %>
-<% tc_id = '0'; %>
-<% } %>
-
-<% let join_msg_req = ''; %>
-<% if (join_message) join_msg_req = 'required'; %>
+<% 
+const plugin = disabledPlugins[0] ? '' : 'checked';
+const join = joins.length > 0 ? joins[0] : undefined;
+const joinMessage = join ? join.msg : 'Enjoy your stay!';
+const tcId = join ? join.tc_id : '0';
+const joinMsgReq = joinMessage ? 'required' : '';
+%>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -72,10 +56,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Join Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'join')" <%= plugin %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'join')" <%= plugin %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -101,41 +85,34 @@
                     </div>
                 </div>
                 <div class="padding-top padding-bottom padding-left padding-right">
-                    <form action="/submit/join" method="POST" id="form_join">
+                    <form action="/submit/join" method="POST" id="form-join">
                         <div class="settings-disclaimer">
                             <div>A custom message for joining members.</div>
                             <br />
                             <div class="form-group">
-                                <textarea onkeyup="setRequired(this);handle_join_msg(this);" id="join_msg" name="join_msg" maxlength="2048" <%= join_msg_req %>><%= join_message %></textarea>
-                                <label for="join_msg" class="control-label">Welcome Message</label><i class="bar"></i>
+                                <textarea onkeyup="setRequired(this); handleJoinMsg(this);" id="join-msg" name="join-msg" maxlength="2048" <%= joinMsgReq %>><%= joinMessage %></textarea>
+                                <label for="join-msg" class="control-label">Welcome Message</label><i class="bar"></i>
                             </div>
                         </div>
                         <div class="settings-disclaimer">
                             <div>This is the text channel the welcome messages will be posted in.</div>
                             <br />
                             <div class="form-group">
-                                <% let default_selected = ''; %>
-                                <% if (tc_id === '0') { %>
-                                <% default_selected = 'selected'; %>
-                                <% } %>
-
-                                <select id="tc" name="tc" onchange="changeTcSel(this);submit_join();">
-                                    <option value="0" <%= default_selected %>>No text channel</option>
+                                <% let defaultSelected = tcId === '0' ? 'selected' : ''; %>
+                                <select id="tc" name="tc" onchange="changeTcSel(this); submitJoin();">
+                                    <option value="0" <%= defaultSelected %>>No text channel</option>
                                     <% botGuild.channels.cache.forEach(channel => { %>
-                                    <% if (channel.type === 'text' || channel.type === 'news') { %>
-                                    <% let selected = '' %>
-                                    <% if (channel.id === tc_id) { %>
-                                    <% selected = 'selected'; %>
-                                    <% } %>
+                                    <%     if (channel.type === 'text' || channel.type === 'news') { %>
+                                    <%         const selected = channel.id === tcId ? 'selected' : ''; %>
                                     <option value="<%= channel.id %>" <%= selected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                                    <% } %>
+                                    <%     } %>
                                     <% }); %>
                                 </select>
                                 <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
                             </div>
                         </div>
                         <!-- to include it in url params -->
-                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                        <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                     </form>
                 </div>
             </div>

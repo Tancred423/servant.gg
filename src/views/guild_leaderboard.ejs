@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Leaderboard: <%= guild.name %></title>
 <meta name="title" content="Servant | Leaderboard: <%= guild.name %>">
@@ -27,13 +27,13 @@
 <meta property="twitter:title" content="Servant | Leaderboard: <%= guild.name %>">
 <meta property="twitter:description" content="See all the rankings of <%= guild.name %>!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-lead') -%>
+<%- include('partials/nav_highlights/nav_lead') -%>
 <%- include('partials/functions') -%>
 
 <script>
-  var varIsAuthorized = <%- JSON.stringify(isAuthorized) %>;
+  var globalIsAuthorized = <%- JSON.stringify(isAuthorized) %>;
 </script>
 
 <div class="main-wrapper">
@@ -50,13 +50,13 @@
       </h1>
       <div class="path"><a href="/">Home</a> > <a href="/leaderboard">Leaderboard</a> > <a href="/leaderboard/<%= guild.id %>"><%= guild.name %></a></div>
     </div>
-    <% var hidden = isAuthorized ? '' : 'hidden'; %>
+    <% const hidden = isAuthorized ? '' : 'hidden'; %>
     <div class="main-content banner <%= hidden %>">
       <div class="padding-top padding-bottom padding-left padding-right">
         <div class="global-switch danger-switch">
           <span class="red"><i class="fas fa-edit"></i> Danger mode</span>
           <label class="switch">
-            <input name="danger_mode" id="danger_mode" type="checkbox">
+            <input name="danger-mode" id="danger-mode" type="checkbox">
             <span class="slider round slider-red"></span>
           </label>
         </div>
@@ -65,30 +65,29 @@
     <div class="com-sub-featured">
       <div class="padding-top padding-bottom padding-left padding-right">
         <div class="leaderboard-wrapper">
-          <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't delete member(s)."></div>
+          <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="Couldn't delete member(s)."></div>
           <div id="dismissible-item-forbidden" data-component="dismissible-item" data-type="error" data-value="You're not allowed to reset members!"></div>
           <div class="danger-area <%= hidden %>" id="danger-area">
-            <button class="btn-redirect empty btn-danger" id="prune-members" name="<%= guild.id %>" onclick="submit_prune_members(this);">Reset members who left this server</button>
-            <button class="btn-redirect btn-danger" id="reset-members" name="<%= guild.id %>" onclick="submit_reset_members(this);">Reset ALL members</button>
+            <button class="btn-redirect empty btn-danger" id="prune-members" name="<%= guild.id %>" onclick="submitPruneMembers(this);">Reset members who left this server</button>
+            <button class="btn-redirect btn-danger" id="reset-members" name="<%= guild.id %>" onclick="submitResetMembers(this);">Reset ALL members</button>
           </div>
 
           <% if (exps.length == 0) { %>
           <div>No entries</div>
+
           <% } else { %>
-          <%  let counter = 1; %>
-          <%  exps.forEach(exp => { %>
-          <%    if (counter <= 100) { %>
+          <%   let counter = 1; %>
+          <%   exps.forEach(exp => { %>
+          <%     if (counter <= 100) { %>
+          <%       const currentExp = exp.exp; %>
+          <%       const currentLevel = getLevelFromExp(currentExp); %>
+          <%       const neededExp = getLevelExp(currentLevel); %>
+          <%       const currentExpOnThisLevel = currentExp - getTotalLevelExp(currentLevel - 1); %>
+          <%       const percent = getLevelPercent(currentExpOnThisLevel, neededExp); %>
+          <%       const user = bot.users.cache.get(exp.user_id); %>
+          <%       const botGuild = bot.guilds.cache.get(guild.id); %>
+          <%       if (user) { %>
 
-          <%      let currentExp = exp.exp; %>
-          <%      let currentLevel = getLevelFromExp(currentExp); %>
-          <%      let neededExp = getLevelExp(currentLevel); %>
-          <%      let currentExpOnThisLevel = currentExp - getTotalLevelExp(currentLevel - 1); %>
-          <%      let percent = getLevelPercent(currentExpOnThisLevel, neededExp); %>
-
-          <%      let user = bot.users.cache.get(exp.user_id); %>
-
-          <%      let botGuild = bot.guilds.cache.get(guild.id); %>
-          <%      if (user !== undefined) { %>
           <div class="block">
             <div class="lead-user-wrapper">
               <div class="delete-user-fake <%= hidden %>"></div>
@@ -135,13 +134,13 @@
                   </div>
                 </div>
               </div>
-              <button class="delete-user <%= hidden %>" name="<%= guild.id %>|<%= exp.user_id %>" onclick="submit_reset_member(this);"><i class="fas fa-trash"></i></button>
+              <button class="delete-user <%= hidden %>" name="<%= guild.id %>|<%= exp.user_id %>" onclick="submitResetMember(this);"><i class="fas fa-trash"></i></button>
             </div>
           </div>
-          <% counter++ %>
-          <%      } %>
-          <%    } %>
-          <%  }) %>
+          <% counter++; %>
+          <%       } %>
+          <%     } %>
+          <%   }) %>
           <% } %>
         </div>
       </div>

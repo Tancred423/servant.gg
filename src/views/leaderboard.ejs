@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Leaderboard</title>
 <meta name="title" content="Servant | Leaderboard">
@@ -27,9 +27,9 @@
 <meta property="twitter:title" content="Servant | Leaderboard">
 <meta property="twitter:description" content="Choose a server and see all the rankings!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-lead') -%>
+<%- include('partials/nav_highlights/nav_lead') -%>
 
 <div class="main-wrapper">
   <div class="lead-wrapper">
@@ -43,21 +43,16 @@
         <div class="leaderboard-wrapper">
           <h2>Choose a server to display its leaderboard</h2>
 
-          <% var guilds = req.user.guilds %>
-
+          <% const guilds = req.user.guilds %>
           <% guilds.forEach(guild => { %>
-          <% if (guild.id !== '264445053596991498') { // Exclude Discord Bot List %>
-
-          <% var botIsOnGuild = false; %>
-          <% if (bot.guilds.cache.get(guild.id) !== undefined) botIsOnGuild = true; %>
-
-          <% var levelingIsDisabled = lvlDisabledGuilds.indexOf(guild.id) > -1; %>
-          <% var guildHasEntry = allGuilds.indexOf(guild.id) > -1; %>
-          <% let moderationIsDisabled = lvlDisabledModeration.indexOf(guild.id) > -1; %>
-
+          <%   if (guild.id !== '264445053596991498') { %> <%# Exclude Discord Bot List %>
+          <%     const botIsOnGuild = bot.guilds.cache.get(guild.id) !== undefined; %>
+          <%     const levelingIsDisabled = lvlDisabledGuilds.indexOf(guild.id) > -1; %>
+          <%     const guildHasEntry = allGuilds.indexOf(guild.id) > -1; %>
+          <%     const moderationIsDisabled = lvlDisabledModeration.indexOf(guild.id) > -1; %>
           <div class="dashboard-button-margin"></div>
-          <% if (botIsOnGuild) { %>
-          <% if (guildHasEntry && !levelingIsDisabled && !moderationIsDisabled) { %>
+          <%       if (botIsOnGuild) { %>
+          <%         if (guildHasEntry && !levelingIsDisabled && !moderationIsDisabled) { %>
           <a href="/leaderboard/<%= guild.id %>" class="dashboard-button">
             <div class="guild-name">
               <% if (guild.icon === null) { %>
@@ -72,7 +67,7 @@
               <input class="btn-redirect" type="submit" value="Leaderboard" />
             </div>
           </a>
-          <% } else { %>
+          <%      } else { %>
           <div class="dashboard-button-disabled">
             <div class="guild-name">
               <% if (guild.icon === null) { %>
@@ -87,11 +82,10 @@
               <input class="btn-redirect empty" type="submit" value="Leveling Disabled" />
             </div>
           </div>
-          <% } %>
-          <% } %>
-          <% } %>
+          <%       } %>
+          <%     } %>
+          <%   } %>
           <% }); %>
-
         </div>
       </div>
     </div>

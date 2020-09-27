@@ -2,107 +2,162 @@ const router = require('express').Router();
 const mysql = require('../database/mysql');
 const moment = require('moment-timezone');
 const cookieParser = require('cookie-parser');
-const { authorize } = require('passport');
+
+// Global functions
+const functions = require('../public/scripts/functions');
+const nws = functions.nws;
+const isLoggedIn = functions.isLoggedIn;
+const getCurrentGuildId1 = functions.getCurrentGuildId1;
+const getCurrentGuildId2 = functions.getCurrentGuildId2;
+const getCurrentGuildId3 = functions.getCurrentGuildId3;
+const findGuildById = functions.findGuildById;
+const getAuthorization = functions.getAuthorization;
+const getSupporterStatus = functions.getSupporterStatus;
 
 router.use(cookieParser());
 
-module.exports = function (bot) {
-    function isAuthorized(req, res, next) {
-        if (req.user)
-            next();
-        else {
-            res.cookie('redirect', req.originalUrl)
-            res.redirect('/auth');
-        }
-    }
+module.exports = (bot) => {
+    ////////////////////////////////////////////
+    // Routes
+    ////////////////////////////////////////////
 
-    function getPrefix(req, mysql, guildId, callback) {
+    // Dashboard
+    router.get('/', isLoggedIn, (req, res) => {
+        renderDashboard(req, res);
+    });
+
+    // Moderation - Auto Role
+    router.get('*/moderation/auto-role', isLoggedIn, (req, res) => {
+        renderModerationAutorole(req, res);
+    });
+
+    // Moderation - Best of Image
+    router.get('*/moderation/best-of-image', isLoggedIn, (req, res) => {
+        renderModerationBestOfImage(req, res);
+    });
+
+    // Moderation - Best of Quote
+    router.get('*/moderation/best-of-quote', isLoggedIn, (req, res) => {
+        renderModerationBestOfQuote(req, res);
+    });
+
+    // Moderation - Birthday
+    router.get('*/moderation/birthday', isLoggedIn, (req, res) => {
+        renderModerationBirthday(req, res);
+    });
+
+    // Moderation - Custom Commands
+    router.get('*/moderation/custom-commands', isLoggedIn, (req, res) => {
+        renderModerationCustomCommands(req, res);
+    });
+
+    // Moderation - Embed
+    router.get('*/moderation/embed', isLoggedIn, (req, res) => {
+        renderModerationEmbed(req, res);
+    });
+
+    // Moderation - Join
+    router.get('*/moderation/join', isLoggedIn, (req, res) => {
+        renderModerationJoin(req, res);
+    });
+
+    // Moderation - Leave
+    router.get('*/moderation/leave', isLoggedIn, (req, res) => {
+        renderModerationLeave(req, res);
+    });
+
+    // Moderation - Level
+    router.get('*/moderation/level', isLoggedIn, (req, res) => {
+        renderModerationLevel(req, res);
+    });
+
+    // Moderation - Livestream
+    router.get('*/moderation/livestream', isLoggedIn, (req, res) => {
+        renderModerationLivestream(req, res);
+    });
+
+    // Moderation - Log
+    router.get('*/moderation/log', isLoggedIn, (req, res) => {
+        renderModerationLog(req, res)
+    });
+
+    // Moderation - Media only Channel
+    router.get('*/moderation/media-only-channel', isLoggedIn, (req, res) => {
+        renderModerationMediaOnlyChannel(req, res);
+    });
+
+    // Moderation - Reaction Role
+    router.get('*/moderation/reaction-role', isLoggedIn, (req, res) => {
+        renderModerationReactionRole(req, res);
+    });
+
+    // Moderation - Voice Lobby
+    router.get('*/moderation/voice-lobby', isLoggedIn, (req, res) => {
+        renderModerationVoiceLobby(req, res);
+    });
+
+    // Moderation - 404
+    router.get('*/moderation/*', isLoggedIn, (req, res) => {
+        res.render('404', { req });
+    });
+
+    // Moderation
+    router.get('*/moderation', isLoggedIn, (req, res) => {
+        renderModeration(req, res);
+    });
+
+    // Utility
+    router.get('*/utility', isLoggedIn, (req, res) => {
+        renderUtility(req, res);
+    });
+
+    // Fun
+    router.get('*/fun', isLoggedIn, (req, res) => {
+        renderFun(req, res);
+    });
+
+    // Interaction
+    router.get('*/interaction', isLoggedIn, (req, res) => {
+        renderInteraction(req, res);
+    });
+
+    // Random
+    router.get('*/random', isLoggedIn, (req, res) => {
+        renderRandom(req, res);
+    });
+
+    // Guild dashboard
+    router.get('*', isLoggedIn, (req, res) => {
+        renderGuildDashboard(req, res);
+    });
+
+    ////////////////////////////////////////////
+    // General
+    ////////////////////////////////////////////
+
+    async function getPrefix(req, mysql, guildId) {
         let prefix = '!';
 
         if (req.user) {
-            let sql = "SELECT prefix " +
-                "FROM guilds " +
-                "WHERE guild_id=" + mysql.escape(guildId);
+            try {
+                let sql = nws`SELECT prefix
+                    FROM guilds
+                    WHERE guild_id=${mysql.escape(guildId)}`;
 
-            mysql.query(sql, function (err, prefixes) {
-                if (err)
-                    console.log(err);
-                else if (prefixes.length > 0)
+                let prefixes = await mysql.query(sql);
+                prefixes = prefixes[0];
+
+                if (prefixes.length > 0)
                     prefix = prefixes[0].prefix;
-
-                if (prefix == '') prefix = '!';
-
-                return callback(prefix);
-            });
-        } else return callback(prefix);
-    }
-
-    function get_authorization(req, id, mysql, bot, callback) {
-        let botUser = bot.users.cache.get(req.user.discordId);
-        let botGuild = bot.guilds.cache.get(id);
-        let is_authorized = false;
-
-        if (botGuild !== undefined) {
-            // Owner?
-            let isOwner = botGuild.ownerID == req.user.discordId;
-
-            // Admin?
-            let isAdmin = false;
-            let member = undefined;
-
-            if (botGuild !== undefined && botUser !== undefined) {
-                member = botGuild.member(botUser);
-                isAdmin = member.hasPermission("ADMINISTRATOR");
-            }
-
-            // Servant-Moderator?
-            let isServantMod = false;
-
-            let sql = "SELECT * " +
-                "FROM guild_mod_roles " +
-                "WHERE guild_id=" + mysql.escape(id);
-
-            mysql.query(sql, function (err, modRoleIdEntries) {
-                if (err) {
-                    console.log(err);
-                    callback(false);
-                } else {
-                    modRoleIdEntries.forEach(modRoleIdEntry => {
-                        if (member.roles.cache.get(modRoleIdEntry.role_id) !== undefined)
-                            isServantMod = true;
-                    });
-
-                    // Authorized?
-                    if (isOwner || isAdmin || isServantMod) is_authorized = true;
-
-                    return callback(is_authorized);
-                }
-            });
-        } else callback(is_authorized);
-    }
-
-    function isSupporter(req, bot, callback) {
-        let isSupporter = false;
-
-        let sk = bot.guilds.cache.get('436925371577925642');
-        if (sk != undefined) {
-            let member = sk.members.cache.get(req.user.discordId);
-            if (member != undefined) {
-                let memberRoles = member.roles.cache;
-                if (memberRoles != undefined) {
-                    memberRoles.forEach(memberRole => {
-                        if (memberRole.id == '715557625244155994') {
-                            isSupporter = true;
-                        }
-                    });
-                }
+            } catch (err) {
+                console.error(err);
             }
         }
 
-        callback(isSupporter);
+        return prefix;
     }
 
-    async function get_owner_guilds(req, bot, mysql) {
+    async function getOwnerGuilds(req, bot, mysql) {
         let guilds = req.user.guilds;
         let ownerGuilds = [];
 
@@ -113,26 +168,29 @@ module.exports = function (bot) {
             let botGuild = bot.guilds.cache.get(guild.id);
             let botUser = bot.users.cache.get(req.user.discordId);
 
-            if (botGuild !== undefined && botUser !== undefined) {
+            if (botGuild && botUser) {
                 let member = botGuild.members.cache.get(botUser.id);
 
-                if (member !== undefined) {
+                if (member) {
                     isAdmin = member.hasPermission("ADMINISTRATOR");
 
-                    let sql = "SELECT * FROM guild_mod_roles WHERE guild_id=" + mysql.escape(guild.id);
+                    let sql = nws`SELECT *
+                        FROM guild_mod_roles
+                        WHERE guild_id=${mysql.escape(guild.id)}`;
+
                     let [rows, fields] = await mysql.query(sql);
 
-                    let mod_role_ids = [];
+                    let modRoleIds = [];
                     for (const row of rows) {
-                        mod_role_ids.push(row.role_id);
+                        modRoleIds.push(row.role_id);
                     }
 
-                    let member_role_ids = [];
+                    let memberRoleIds = [];
                     for (const role of member.roles.cache) {
-                        member_role_ids.push(role[0])
+                        memberRoleIds.push(role[0])
                     }
 
-                    isServantMod = member_role_ids.some(r => mod_role_ids.includes(r));
+                    isServantMod = memberRoleIds.some(r => modRoleIds.includes(r));
                 }
             }
 
@@ -144,1115 +202,1024 @@ module.exports = function (bot) {
         return ownerGuilds;
     }
 
-    router.get('/', isAuthorized, (req, res) => {
-        isSupporter(req, bot, function (isSupporter) {
-            let sql = "SELECT u.prefix, u.color_code, u.bio, u.birthday, l.code, u.profile_bg_id " +
-                "FROM users as u " +
-                "INNER JOIN const_languages as l " +
-                "ON u.language_code=l.code " +
-                "WHERE user_id=" + mysql.escape(req.user.discordId);
+    ////////////////////////////////////////////
+    // Async render-functions
+    ////////////////////////////////////////////
 
-            mysql.query(sql, function (err, result) {
-                if (err) throw err;
-                else {
-                    sql = "SELECT * " +
-                        "FROM user_birthday_guilds " +
-                        "WHERE user_id=" + mysql.escape(req.user.discordId);
+    async function renderDashboard(req, res) {
+        try {
+            // Is supporter
+            let isSupporter = await getSupporterStatus(bot, req);
 
-                    mysql.query(sql, function (err, bday_guilds) {
-                        if (err) throw err;
-                        else {
-                            sql = "SELECT * " +
-                                "FROM const_profile_images"
+            // User data
+            let sql = nws`SELECT u.prefix, u.color_code, u.bio, u.birthday, l.code, u.profile_bg_id
+                FROM users as u
+                INNER JOIN const_languages as l
+                ON u.language_code=l.code
+                WHERE user_id=${mysql.escape(req.user.discordId)}`;
 
-                            mysql.query(sql, function (err, bgs) {
-                                if (err) throw err;
-                                else {
-                                    sql = "SELECT * " +
-                                        "FROM const_languages";
+            let userData = await mysql.query(sql);
+            userData = userData[0];
 
-                                    mysql.query(sql, function (err, languages) {
-                                        if (err) throw err;
-                                        else {
-                                            get_owner_guilds(req, bot, mysql)
-                                                .then(ownerGuilds => {
-                                                    res.render('dashboard', {
-                                                        req, result, bot, mysql, bday_guilds, bgs, languages, ownerGuilds, isSupporter
-                                                    });
-                                                }).catch(console.error);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+            // Birthday guilds
+            sql = nws`SELECT *
+                FROM user_birthday_guilds
+                WHERE user_id=${mysql.escape(req.user.discordId)}`;
+
+            let birthdayGuilds = await mysql.query(sql);
+            birthdayGuilds = birthdayGuilds[0];
+
+            // Backgrounds
+            sql = nws`SELECT *
+                FROM const_profile_images`;
+
+            let backgrounds = await mysql.query(sql);
+            backgrounds = backgrounds[0];
+
+            // Languages
+            sql = nws`SELECT *
+                FROM const_languages`;
+
+            let languages = await mysql.query(sql);
+            languages = languages[0];
+
+            // Owner guilds
+            let ownerGuilds = await getOwnerGuilds(req, bot, mysql);
+
+            res.render('dashboard', {
+                req, bot, mysql, userData, languages, birthdayGuilds, isSupporter, backgrounds, ownerGuilds
             });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/autorole', isAuthorized, (req, res) => {
-        let pathArray = req.originalUrl.split('/');
-        let id = pathArray[pathArray.length - 3];
+    async function renderModerationAutorole(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    let guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_autoroles " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Autoroles
+                let sql = nws`SELECT *
+                    FROM guild_autoroles
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, autoroles) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(1);
+                let autoRoles = await mysql.query(sql);
+                autoRoles = autoRoles[0]
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('autorole', { req, guild, bot, botGuild, autoroles, disabled_plugins })
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(1)}`; // autorole
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('auto_role', { req, guild, bot, botGuild, autoRoles, disabledPlugins })
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/bestofimage', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationBestOfImage(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_best_of_images " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Bois
+                let sql = nws`SELECT *
+                    FROM guild_best_of_images
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, bois) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(2);
+                let bois = await mysql.query(sql);
+                bois = bois[0];
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('bestofimage', { req, guild, bot, botGuild, bois, disabled_plugins })
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)} 
+                    AND plugin_id=${mysql.escape(2)}`; // bestofimage
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('best_of_image', { req, guild, bot, botGuild, bois, disabledPlugins })
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/bestofquote', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationBestOfQuote(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_best_of_quotes " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Boqs
+                let sql = nws`SELECT *
+                    FROM guild_best_of_quotes
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, boqs) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(3);
+                let boqs = await mysql.query(sql);
+                boqs = boqs[0];
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('bestofquote', { req, guild, bot, botGuild, boqs, disabled_plugins })
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins 
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(3)}`; // bestofquote
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('best_of_quote', { req, guild, bot, botGuild, boqs, disabledPlugins })
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/birthday', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationBirthday(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_birthdays " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Guild birthdays
+                let sql = nws`SELECT *
+                    FROM guild_birthdays
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, guild_birthdays) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(13);
+                let guildBirthdays = await mysql.query(sql);
+                guildBirthdays = guildBirthdays[0];
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('birthday', { req, guild, bot, botGuild, disabled_plugins, guild_birthdays });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(13)}`; // birthday
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('birthday', { req, guild, bot, botGuild, disabledPlugins, guildBirthdays });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/customcommands', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationCustomCommands(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        isSupporter(req, bot, function (isSupporter) {
-            get_authorization(req, id, mysql, bot, function (is_authorized) {
-                if (is_authorized) {
-                    getPrefix(req, mysql, id, function (prefix) {
-                        if (req.user.discordId !== id) {
-                            var guilds = req.user.guilds;
-                            guilds.forEach(guild => {
-                                if (guild.id === id) {
-                                    sql = "SELECT color_code " +
-                                        "FROM users " +
-                                        "WHERE user_id=" + mysql.escape(req.user.discordId);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let prefix = await getPrefix(req, mysql, id);
+                let isSupporter = await getSupporterStatus(bot, req);
 
-                                    mysql.query(sql, function (err, color_code) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            sql = "SELECT * " +
-                                                "FROM guild_disabled_plugins " +
-                                                "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                                "AND plugin_id=" + mysql.escape(14);
+                // Color code
+                let sql = nws`SELECT color_code
+                    FROM users
+                    WHERE user_id=${mysql.escape(req.user.discordId)}`;
 
-                                            mysql.query(sql, function (err, disabled_plugins) {
-                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                else {
-                                                    sql = "SELECT * " +
-                                                        "FROM custom_commands " +
-                                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                                        "ORDER BY invoke ASC";
+                let colorCode = await mysql.query(sql);
+                colorCode = colorCode[0];
 
-                                                    mysql.query(sql, function (err, ccs) {
-                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                        else {
-                                                            sql = "SELECT * " +
-                                                                "FROM custom_commands_embeds AS e " +
-                                                                "INNER JOIN custom_commands AS c " +
-                                                                "ON e.cc_id=c.id " +
-                                                                "WHERE c.guild_id=" + mysql.escape(guild.id);
+                // Disabled plugins
+                sql = nws`SELECT *
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(14)}`; // customcommands
 
-                                                            mysql.query(sql, function (err, ccEmbeds) {
-                                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                                else {
-                                                                    sql = "SELECT * " +
-                                                                        "FROM custom_commands_fields AS f " +
-                                                                        "INNER JOIN custom_commands AS c " +
-                                                                        "ON f.cc_id=c.id " +
-                                                                        "WHERE c.guild_id=" + mysql.escape(guild.id);
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
 
-                                                                    mysql.query(sql, function (err, ccFields) {
-                                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                                        else {
-                                                                            sql = "SELECT * " +
-                                                                                "FROM custom_commands_aliases AS a " +
-                                                                                "INNER JOIN custom_commands AS c " +
-                                                                                "ON a.cc_id=c.id " +
-                                                                                "WHERE c.guild_id=" + mysql.escape(guild.id);
+                // Custom commands
+                sql = nws`SELECT *
+                    FROM custom_commands
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    ORDER BY invoke ASC`;
 
-                                                                            mysql.query(sql, function (err, ccAliases) {
-                                                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                                                else {
-                                                                                    sql = "SELECT t.timezone " +
-                                                                                        "FROM guilds as g " +
-                                                                                        "INNER JOIN const_timezones AS t " +
-                                                                                        "ON g.timezone_id=t.id " +
-                                                                                        "WHERE g.guild_id=" + mysql.escape(guild.id);
+                let ccs = await mysql.query(sql);
+                ccs = ccs[0];
 
-                                                                                    mysql.query(sql, function (err, timezones) {
-                                                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                                                        else {
-                                                                                            let commandsAmount = ccs.length;
+                // Amount custom commands
+                let commandsAmount = ccs.length;
 
-                                                                                            let timestamp_tz_formats = [];
+                // Custom command embeds
+                sql = nws`SELECT *
+                    FROM custom_commands_embeds AS e
+                    INNER JOIN custom_commands AS c
+                    ON e.cc_id=c.id
+                    WHERE c.guild_id=${mysql.escape(guild.id)}`;
 
-                                                                                            if (ccEmbeds.length > 0) {
-                                                                                                ccEmbeds.forEach(cce => {
-                                                                                                    let timestamp = cce.timestamp;
-                                                                                                    let timestamp_utc = moment.tz(timestamp, "UTC");
-                                                                                                    let timezone = timezones.length > 0 ? timezones[0].timezone : "UTC";
-                                                                                                    let timestamp_tz = timestamp_utc.clone().tz(timezone);
+                let ccEmbeds = await mysql.query(sql);
+                ccEmbeds = ccEmbeds[0];
 
-                                                                                                    timestamp_tz_formats.push({
-                                                                                                        cc_id: cce.cc_id,
-                                                                                                        tz: timestamp_tz.format()
-                                                                                                    });
-                                                                                                });
-                                                                                            }
+                // Custom command fields
+                sql = nws`SELECT *
+                    FROM custom_commands_fields AS f
+                    INNER JOIN custom_commands AS c
+                    ON f.cc_id=c.id
+                    WHERE c.guild_id=${mysql.escape(guild.id)}`;
 
-                                                                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                                                                            res.render('customcommands', { req, prefix, guild, bot, botGuild, color_code, isSupporter, disabled_plugins, timestamp_tz_formats, commandsAmount, ccs, ccEmbeds, ccFields, ccAliases });
-                                                                                        }
-                                                                                    });
-                                                                                }
-                                                                            });
-                                                                        }
-                                                                    });
-                                                                }
-                                                            });
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        } else res.render('404', { req });
-                    });
-                } else res.render('404', { req });
-            });
-        });
-    });
+                let ccFields = await mysql.query(sql);
+                ccFields = ccFields[0];
 
-    router.get('*/moderation/embed', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+                // Custom command aliases
+                sql = nws`SELECT *
+                    FROM custom_commands_aliases AS a
+                    INNER JOIN custom_commands AS c
+                    ON a.cc_id=c.id
+                    WHERE c.guild_id=${mysql.escape(guild.id)}`;
 
-        isSupporter(req, bot, function (isSupporter) {
-            get_authorization(req, id, mysql, bot, function (is_authorized) {
-                if (is_authorized) {
-                    if (req.user.discordId !== id) {
-                        var guilds = req.user.guilds;
-                        guilds.forEach(guild => {
-                            if (guild.id === id) {
+                let ccAliases = await mysql.query(sql);
+                ccAliases = ccAliases[0];
 
-                                sql = "SELECT color_code " +
-                                    "FROM users " +
-                                    "WHERE user_id=" + mysql.escape(req.user.discordId);
+                // Timezones
+                sql = nws`SELECT t.timezone
+                    FROM guilds as g
+                    INNER JOIN const_timezones AS t
+                    ON g.timezone_id=t.id
+                    WHERE g.guild_id=${mysql.escape(guild.id)}`;
 
-                                mysql.query(sql, function (err, color_code) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        let botGuild = bot.guilds.cache.get(guild.id);
-                                        res.render('embed', { req, guild, bot, botGuild, color_code, isSupporter })
-                                    }
-                                });
-                            }
+                let timezones = await mysql.query(sql);
+                timezones = timezones[0];
+
+                let timestampTzFormats = [];
+
+                if (ccEmbeds.length > 0) {
+                    ccEmbeds.forEach(cce => {
+                        let timestamp = cce.timestamp;
+                        let timestampUtc = moment.tz(timestamp, "UTC");
+                        let timezone = timezones.length > 0 ? timezones[0].timezone : "UTC";
+                        let timestampTz = timestampUtc.clone().tz(timezone);
+
+                        timestampTzFormats.push({
+                            ccId: cce.cc_id,
+                            tz: timestampTz.format()
                         });
-                    }
-                } else res.render('404', { req });
-            });
-        });
-    });
-
-    router.get('*/moderation/join', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
-
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_joins " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
-
-                            mysql.query(sql, function (err, joins) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(5);
-
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('join', { req, guild, bot, botGuild, joins, disabled_plugins })
-                                        }
-                                    });
-                                }
-                            });
-                        }
                     });
                 }
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('custom_commands', { req, prefix, guild, bot, botGuild, colorCode, isSupporter, disabledPlugins, timestampTzFormats, commandsAmount, ccs, ccEmbeds, ccFields, ccAliases });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/leave', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationEmbed(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_leaves " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let isSupporter = await getSupporterStatus(bot, req);
 
-                            mysql.query(sql, function (err, leaves) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(6);
+                // Color code
+                let sql = nws`SELECT color_code
+                    FROM users
+                    WHERE user_id=${mysql.escape(req.user.discordId)}`;
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('leave', { req, guild, bot, botGuild, leaves, disabled_plugins })
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                let colorCode = await mysql.query(sql);
+                colorCode = colorCode[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+                res.render('embed', { req, guild, bot, botGuild, colorCode, isSupporter })
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/level', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationJoin(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_level " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Joins
+                let sql = nws`SELECT *
+                    FROM guild_joins
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, guild_levels) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(7);
+                let joins = await mysql.query(sql);
+                joins = joins[0];
 
-                                    mysql.query(sql, function (err, disabledLevels) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            sql = "SELECT * " +
-                                                "FROM guild_level_roles " +
-                                                "WHERE guild_id=" + mysql.escape(guild.id);
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(5)}`; // join
 
-                                            mysql.query(sql, function (err, level_roles) {
-                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                else {
-                                                    sql = "SELECT guild_id " +
-                                                        "FROM guilds " +
-                                                        "WHERE guild_id=" + mysql.escape(guild.id);
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
 
-                                                    mysql.query(sql, function (err, guilds) {
-                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                        else {
-                                                            let levelToggle = '';
-                                                            if (guilds.length > 0 && disabledLevels.length == 0) levelToggle = 'checked';
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
 
-                                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                                            res.render('level', { req, guild, bot, botGuild, guild_levels, level_roles, levelToggle });
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                res.render('join', { req, guild, bot, botGuild, joins, disabledPlugins })
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/livestream', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationLeave(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_livestreams " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Joins
+                let sql = nws`SELECT *
+                    FROM guild_leaves
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, guild_livestreams) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(8);
+                let leaves = await mysql.query(sql);
+                leaves = leaves[0];
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            sql = "SELECT * " +
-                                                "FROM guild_livestreamers " +
-                                                "WHERE guild_id=" + mysql.escape(guild.id);
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(6)}`; // leave
 
-                                            mysql.query(sql, function (err, guild_livestreamers) {
-                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                else {
-                                                    let botGuild = bot.guilds.cache.get(guild.id);
-                                                    res.render('livestream', { req, guild, bot, botGuild, disabled_plugins, guild_livestreams, guild_livestreamers });
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('leave', { req, guild, bot, botGuild, leaves, disabledPlugins })
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/log', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationLevel(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_logs " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Guild levels
+                let sql = nws`SELECT *
+                    FROM guild_level
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, logs) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(9);
+                let guildLevels = await mysql.query(sql);
+                guildLevels = guildLevels[0];
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('log', { req, guild, bot, botGuild, logs, disabled_plugins })
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(7)}`; // level
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Level roles
+                sql = nws`SELECT *
+                    FROM guild_level_roles
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let levelRoles = await mysql.query(sql);
+                levelRoles = levelRoles[0];
+
+                // Guilds
+                sql = nws`SELECT guild_id
+                    FROM guilds
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let guilds = await mysql.query(sql);
+                guilds = guilds[0];
+
+                // Level toggle
+                let levelToggle = '';
+                if (guilds.length > 0 && disabledPlugins.length == 0) levelToggle = 'checked';
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('level', { req, guild, bot, botGuild, guildLevels, levelRoles, levelToggle });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/mediaonlychannel', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationLivestream(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_media_only_channels " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Guild livestreams
+                let sql = nws`SELECT *
+                    FROM guild_livestreams
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                            mysql.query(sql, function (err, mediaonlychannels) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(10);
+                let guildLivestreams = await mysql.query(sql);
+                guildLivestreams = guildLivestreams[0];
 
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            sql = "SELECT * " +
-                                                "FROM guild_disabled_features " +
-                                                "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                                "AND feature_id=" + mysql.escape(5);
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(8)}`; // livestream
 
-                                            mysql.query(sql, function (err, disabled_features) {
-                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                else {
-                                                    let botGuild = bot.guilds.cache.get(guild.id);
-                                                    res.render('mediaonlychannel', { req, guild, bot, botGuild, mediaonlychannels, disabled_plugins, disabled_features })
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Guild livestreamers
+                sql = nws`SELECT *
+                    FROM guild_livestreamers
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let guildLivestreamers = await mysql.query(sql);
+                guildLivestreamers = guildLivestreamers[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('livestream', { req, guild, bot, botGuild, disabledPlugins, guildLivestreams, guildLivestreamers });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/moderation/reactionrole', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
+    async function renderModerationLog(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        isSupporter(req, bot, function (isSupporter) {
-            get_authorization(req, id, mysql, bot, function (is_authorized) {
-                if (is_authorized) {
-                    if (req.user.discordId !== id) {
-                        var guilds = req.user.guilds;
-                        guilds.forEach(guild => {
-                            if (guild.id === id) {
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Logs
+                let sql = nws`SELECT *
+                    FROM guild_logs
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                                sql = "SELECT color_code " +
-                                    "FROM users " +
-                                    "WHERE user_id=" + mysql.escape(req.user.discordId);
+                let logs = await mysql.query(sql);
+                logs = logs[0];
 
-                                mysql.query(sql, function (err, color_code) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        sql = "SELECT * " +
-                                            "FROM guild_disabled_plugins " +
-                                            "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                            "AND plugin_id=" + mysql.escape(11);
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(9)}`; // log
 
-                                        mysql.query(sql, function (err, disabled_plugins) {
-                                            if (err) { console.log(err); res.sendStatus(500); }
-                                            else {
-                                                sql = "SELECT * " +
-                                                    "FROM reaction_role_messages " +
-                                                    "WHERE guild_id=" + mysql.escape(guild.id);
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
 
-                                                mysql.query(sql, function (err, rr_msgs) {
-                                                    if (err) { console.log(err); res.sendStatus(500); }
-                                                    else {
-                                                        sql = "SELECT * " +
-                                                            "FROM reaction_roles " +
-                                                            "WHERE guild_id=" + mysql.escape(guild.id);
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
 
-                                                        mysql.query(sql, function (err, rr_roles_emojis) {
-                                                            if (err) { console.log(err); res.sendStatus(500); }
-                                                            else {
-                                                                sql = "SELECT * " +
-                                                                    "FROM reaction_role_fields " +
-                                                                    "WHERE guild_id=" + mysql.escape(guild.id);
+                res.render('log', { req, guild, bot, botGuild, logs, disabledPlugins });
+            } else res.render('404', { req });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-                                                                mysql.query(sql, function (err, rr_fields) {
-                                                                    if (err) { console.log(err); res.sendStatus(500); }
-                                                                    else {
-                                                                        sql = "SELECT t.timezone " +
-                                                                            "FROM guilds as g " +
-                                                                            "INNER JOIN const_timezones AS t " +
-                                                                            "ON g.timezone_id=t.id " +
-                                                                            "WHERE g.guild_id=" + mysql.escape(guild.id);
+    async function renderModerationMediaOnlyChannel(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-                                                                        mysql.query(sql, function (err, timezones) {
-                                                                            if (err) { console.log(err); res.sendStatus(500); }
-                                                                            else {
-                                                                                let timestamp_tz_formats = [];
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Media only channels
+                let sql = nws`SELECT *
+                    FROM guild_media_only_channels
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                                                                                if (rr_msgs.length > 0) {
-                                                                                    rr_msgs.forEach(rr_msg => {
-                                                                                        let timestamp = rr_msg.timestamp;
-                                                                                        let timestamp_utc = moment.tz(timestamp, "UTC");
-                                                                                        let timezone = timezones.length > 0 ? timezones[0].timezone : "UTC";
-                                                                                        let timestamp_tz = timestamp_utc.clone().tz(timezone);
-                                                                                        timestamp_tz_formats.push({
-                                                                                            msg_id: rr_msg.msg_id,
-                                                                                            tz: timestamp_tz.format()
-                                                                                        });
-                                                                                    });
-                                                                                }
+                let mediaonlychannels = await mysql.query(sql);
+                mediaonlychannels = mediaonlychannels[0];
 
-                                                                                let rrAmount = rr_msgs.length;
-                                                                                let botGuild = bot.guilds.cache.get(guild.id);
+                // Disabled plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(10)}`; // mediaonlychannel
 
-                                                                                let channels = [];
-                                                                                botGuild.channels.cache.forEach(channel => {
-                                                                                    channels.push({
-                                                                                        id: channel.id,
-                                                                                        name: channel.name,
-                                                                                        type: channel.type,
-                                                                                        viewable: channel.viewable,
-                                                                                        parent_name: channel.parent ? channel.parent.name : ''
-                                                                                    });
-                                                                                });
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
 
-                                                                                res.render('reactionrole', { req, guild, bot, botGuild, color_code, isSupporter, disabled_plugins, rr_msgs, rr_roles_emojis, rr_fields, timestamp_tz_formats, rrAmount, channels });
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                });
-                                                            }
-                                                        });
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
+                // Disabled features
+                sql = nws`SELECT *
+                    FROM guild_disabled_features
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND feature_id=${mysql.escape(5)}`; // media_only_warning
+
+                let disabledFeatures = await mysql.query(sql);
+                disabledFeatures = disabledFeatures[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('media_only_channel', { req, guild, bot, botGuild, mediaonlychannels, disabledPlugins, disabledFeatures });
+            } else res.render('404', { req });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
+
+    async function renderModerationReactionRole(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
+
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let isSupporter = await getSupporterStatus(bot, req);
+
+                // Color code
+                let sql = nws`SELECT color_code
+                    FROM users
+                    WHERE user_id=${mysql.escape(req.user.discordId)}`;
+
+                let colorCode = await mysql.query(sql);
+                colorCode = colorCode[0];
+
+                // Disabled plugins
+                sql = nws`SELECT *
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(11)}`; // reactionrole
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Reaction role messages
+                sql = nws`SELECT *
+                    FROM reaction_role_messages
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let rrMsgs = await mysql.query(sql);
+                rrMsgs = rrMsgs[0];
+
+                // Amount reaction roles
+                let rrAmount = rrMsgs.length;
+
+                // Reaction roles emojis
+                sql = nws`SELECT *
+                    FROM reaction_roles
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let rrRolesEmojis = await mysql.query(sql);
+                rrRolesEmojis = rrRolesEmojis[0];
+
+                // Reaction role fields
+                sql = nws`SELECT *
+                    FROM reaction_role_fields
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let rrFields = await mysql.query(sql);
+                rrFields = rrFields[0];
+
+                // Timezones
+                sql = nws`SELECT t.timezone
+                    FROM guilds as g
+                    INNER JOIN const_timezones AS t
+                    ON g.timezone_id=t.id
+                    WHERE g.guild_id=${mysql.escape(guild.id)}`;
+
+                let timezones = await mysql.query(sql);
+                timezones = timezones[0];
+
+                let timestampTzFormats = [];
+
+                if (rrMsgs.length > 0) {
+                    rrMsgs.forEach(rrMsg => {
+                        let timestamp = rrMsg.timestamp;
+                        let timestampUtc = moment.tz(timestamp, "UTC");
+                        let timezone = timezones.length > 0 ? timezones[0].timezone : "UTC";
+                        let timestampTz = timestampUtc.clone().tz(timezone);
+                        timestampTzFormats.push({
+                            msgId: rrMsg.msg_id,
+                            tz: timestampTz.format()
                         });
-                    } else res.render('404', { req });
-                } else res.render('404', { req });
-            });
-        });
-    });
-
-    router.get('*/moderation/voicelobby', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 3];
-
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                if (req.user.discordId !== id) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            let sql = "SELECT * " +
-                                "FROM guild_voice_lobbies " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
-
-                            mysql.query(sql, function (err, voicelobbies) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT id " +
-                                        "FROM guild_disabled_plugins " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                        "AND plugin_id=" + mysql.escape(12);
-
-                                    mysql.query(sql, function (err, disabled_plugins) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                            res.render('voicelobby', { req, guild, bot, botGuild, voicelobbies, disabled_plugins })
-                                        }
-                                    });
-                                }
-                            });
-                        }
                     });
                 }
-            } else res.render('404', { req });
-        });
-    });
 
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
 
-    // Moderation - 404
-    router.get('*/moderation/*', isAuthorized, (req, res) => {
-        res.render('404', { req });
-    });
-
-    router.get('*/moderation', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 2];
-
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                getPrefix(req, mysql, id, function (prefix) {
-                    var guilds = req.user.guilds;
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            sql = "SELECT * " +
-                                "FROM guild_disabled_categories " +
-                                "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                "AND category_id=" + mysql.escape(3);
-
-                            mysql.query(sql, function (err, disabled_categories) {
-                                if (err) { console.log(err); res.sendStatus(500); }
-                                else {
-                                    sql = "SELECT * " +
-                                        "FROM const_commands " +
-                                        "WHERE category_id=" + mysql.escape(3) + " " +
-                                        "ORDER BY name ASC";
-
-                                    mysql.query(sql, function (err, commands) {
-                                        if (err) { console.log(err); res.sendStatus(500); }
-                                        else {
-                                            sql = "SELECT * " +
-                                                "FROM guild_disabled_commands " +
-                                                "WHERE guild_id=" + mysql.escape(guild.id);
-                                            mysql.query(sql, function (err, disabled_commands) {
-                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                else {
-                                                    sql = "SELECT d.guild_id, p.name " +
-                                                        "FROM guild_disabled_plugins AS d " +
-                                                        "INNER JOIN const_plugins AS p " +
-                                                        "ON d.plugin_id=p.id " +
-                                                        "WHERE d.guild_id=" + mysql.escape(guild.id);
-
-                                                    mysql.query(sql, function (err, disabled_plugins) {
-                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                        else {
-                                                            sql = "SELECT id " +
-                                                                "FROM guild_disabled_plugins " +
-                                                                "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                                                "AND plugin_id=" + mysql.escape(7); // Level
-
-                                                            mysql.query(sql, function (err, disabledLevels) {
-                                                                if (err) { console.log(err); res.sendStatus(500); }
-                                                                else {
-                                                                    sql = "SELECT guild_id " +
-                                                                        "FROM guilds " +
-                                                                        "WHERE guild_id=" + mysql.escape(guild.id);
-
-                                                                    mysql.query(sql, function (err, guilds) {
-                                                                        if (err) { console.log(err); res.sendStatus(500); }
-                                                                        else {
-                                                                            let levelToggle = '';
-                                                                            if (guilds.length > 0 && disabledLevels.length == 0) levelToggle = 'checked';
-                                                                            res.render('moderation', { req, prefix, guild, disabled_categories, commands, disabled_commands, disabled_plugins, levelToggle });
-                                                                        }
-                                                                    });
-                                                                }
-                                                            });
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
+                // Channels
+                let channels = [];
+                botGuild.channels.cache.forEach(channel => {
+                    channels.push({
+                        id: channel.id,
+                        name: channel.name,
+                        type: channel.type,
+                        viewable: channel.viewable,
+                        parentName: channel.parent ? channel.parent.name : ''
                     });
                 });
+
+                res.render('reaction_role', { req, guild, bot, botGuild, colorCode, isSupporter, disabledPlugins, rrMsgs, rrRolesEmojis, rrFields, timestampTzFormats, rrAmount, channels });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/utility', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 2];
+    async function renderModerationVoiceLobby(req, res) {
+        try {
+            let id = getCurrentGuildId3(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                getPrefix(req, mysql, id, function (prefix) {
-                    if (req.user.discordId !== id) {
-                        var guilds = req.user.guilds;
-                        guilds.forEach(guild => {
-                            if (guild.id === id) {
-                                sql = "SELECT * " +
-                                    "FROM guild_disabled_categories " +
-                                    "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                    "AND category_id=" + mysql.escape(4);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Voice lobbies
+                let sql = nws`SELECT *
+                    FROM guild_voice_lobbies
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                                mysql.query(sql, function (err, disabled_categories) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        sql = "SELECT * " +
-                                            "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(4) + " " +
-                                            "ORDER BY name ASC";
+                let voiceLobbies = await mysql.query(sql);
+                voiceLobbies = voiceLobbies[0];
 
-                                        mysql.query(sql, function (err, commands) {
-                                            if (err) { console.log(err); res.sendStatus(500); }
-                                            else {
-                                                sql = "SELECT * " +
-                                                    "FROM guild_disabled_commands " +
-                                                    "WHERE guild_id=" + mysql.escape(guild.id);
-                                                mysql.query(sql, function (err, disabled_commands) {
-                                                    if (err) { console.log(err); res.sendStatus(500); }
-                                                    else {
-                                                        res.render('utility', { req, prefix, guild, disabled_categories, commands, disabled_commands });
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
+                // Disabled Plugins
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(12)}`; // voicelobby
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('voice_lobby', { req, guild, bot, botGuild, voiceLobbies, disabledPlugins });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/fun', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 2];
+    async function renderModeration(req, res) {
+        try {
+            let id = getCurrentGuildId2(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                getPrefix(req, mysql, id, function (prefix) {
-                    if (req.user.discordId !== id) {
-                        var guilds = req.user.guilds;
-                        guilds.forEach(guild => {
-                            if (guild.id === id) {
-                                sql = "SELECT * " +
-                                    "FROM guild_disabled_categories " +
-                                    "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                    "AND category_id=" + mysql.escape(5);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let prefix = await getPrefix(req, mysql, id);
 
-                                mysql.query(sql, function (err, disabled_categories) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        sql = "SELECT * " +
-                                            "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(5) + " " +
-                                            "ORDER BY name ASC";
+                // Disabled categories
+                let sql = nws`SELECT *
+                    FROM guild_disabled_categories
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND category_id=${mysql.escape(3)}`; // Moderation
 
-                                        mysql.query(sql, function (err, commands) {
-                                            if (err) { console.log(err); res.sendStatus(500); }
-                                            else {
-                                                sql = "SELECT * " +
-                                                    "FROM guild_disabled_commands " +
-                                                    "WHERE guild_id=" + mysql.escape(guild.id);
-                                                mysql.query(sql, function (err, disabled_commands) {
-                                                    if (err) { console.log(err); res.sendStatus(500); }
-                                                    else {
-                                                        res.render('fun', { req, prefix, guild, disabled_categories, commands, disabled_commands });
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
+                let disabledCategories = await mysql.query(sql);
+                disabledCategories = disabledCategories[0];
+
+                // Commands
+                sql = nws`SELECT *
+                    FROM const_commands
+                    WHERE category_id=${mysql.escape(3)}
+                    ORDER BY name ASC`; // Moderation
+
+                let commands = await mysql.query(sql);
+                commands = commands[0];
+
+                // Disabled commands
+                sql = nws`SELECT *
+                    FROM guild_disabled_commands
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let disabledCommands = await mysql.query(sql);
+                disabledCommands = disabledCommands[0];
+
+                // Disabled plugins
+                sql = nws`SELECT d.guild_id, p.name
+                    FROM guild_disabled_plugins AS d
+                    INNER JOIN const_plugins AS p
+                    ON d.plugin_id=p.id
+                    WHERE d.guild_id=${mysql.escape(guild.id)}`;
+
+                let disabledPlugins = await mysql.query(sql);
+                disabledPlugins = disabledPlugins[0];
+
+                // Disabled levels
+                sql = nws`SELECT id
+                    FROM guild_disabled_plugins
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND plugin_id=${mysql.escape(7)}`; // level
+
+                let disabledLevels = await mysql.query(sql);
+                disabledLevels = disabledLevels[0];
+
+                // Guilds
+                sql = nws`SELECT guild_id
+                    FROM guilds
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let guilds = await mysql.query(sql);
+                guilds = guilds[0];
+
+                // Level toggle
+                let levelToggle = '';
+                if (guilds.length > 0 && disabledLevels.length == 0) levelToggle = 'checked';
+
+                res.render('moderation', { req, prefix, guild, disabledCategories, commands, disabledCommands, disabledPlugins, levelToggle });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/interaction', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 2];
+    async function renderUtility(req, res) {
+        try {
+            let id = getCurrentGuildId2(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                getPrefix(req, mysql, id, function (prefix) {
-                    if (req.user.discordId !== id) {
-                        var guilds = req.user.guilds;
-                        guilds.forEach(guild => {
-                            if (guild.id === id) {
-                                sql = "SELECT * " +
-                                    "FROM guild_disabled_categories " +
-                                    "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                    "AND category_id=" + mysql.escape(6);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let prefix = await getPrefix(req, mysql, id);
 
-                                mysql.query(sql, function (err, disabled_categories) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        sql = "SELECT * " +
-                                            "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(6) + " " +
-                                            "ORDER BY name ASC";
+                // Disabled categories
+                sql = nws`SELECT *
+                    FROM guild_disabled_categories
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND category_id=${mysql.escape(4)}`; // Utility
 
-                                        mysql.query(sql, function (err, commands) {
-                                            if (err) { console.log(err); res.sendStatus(500); }
-                                            else {
-                                                sql = "SELECT * " +
-                                                    "FROM guild_disabled_commands " +
-                                                    "WHERE guild_id=" + mysql.escape(guild.id);
-                                                mysql.query(sql, function (err, disabled_commands) {
-                                                    if (err) { console.log(err); res.sendStatus(500); }
-                                                    else {
-                                                        res.render('interaction', { req, prefix, guild, disabled_categories, commands, disabled_commands });
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
+                let disabledCategories = await mysql.query(sql);
+                disabledCategories = disabledCategories[0];
+
+                // Commands
+                sql = nws`SELECT *
+                    FROM const_commands
+                    WHERE category_id=${mysql.escape(4)}
+                    ORDER BY name ASC`; // Utility
+
+                let commands = await mysql.query(sql);
+                commands = commands[0];
+
+                // Disabled commands
+                sql = nws`SELECT *
+                    FROM guild_disabled_commands
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let disabledCommands = await mysql.query(sql);
+                disabledCommands = disabledCommands[0];
+
+                res.render('utility', { req, prefix, guild, disabledCategories, commands, disabledCommands });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*/random', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 2];
+    async function renderFun(req, res) {
+        try {
+            let id = getCurrentGuildId2(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                getPrefix(req, mysql, id, function (prefix) {
-                    if (req.user.discordId !== id) {
-                        var guilds = req.user.guilds;
-                        guilds.forEach(guild => {
-                            if (guild.id === id) {
-                                sql = "SELECT * " +
-                                    "FROM guild_disabled_categories " +
-                                    "WHERE guild_id=" + mysql.escape(guild.id) + " " +
-                                    "AND category_id=" + mysql.escape(7);
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let prefix = await getPrefix(req, mysql, id);
 
-                                mysql.query(sql, function (err, disabled_categories) {
-                                    if (err) { console.log(err); res.sendStatus(500); }
-                                    else {
-                                        sql = "SELECT * " +
-                                            "FROM const_commands " +
-                                            "WHERE category_id=" + mysql.escape(7) + " " +
-                                            "ORDER BY name ASC";
+                // Disabled categories
+                sql = nws`SELECT *
+                    FROM guild_disabled_categories
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND category_id=${mysql.escape(5)}`; // Fun
 
-                                        mysql.query(sql, function (err, commands) {
-                                            if (err) { console.log(err); res.sendStatus(500); }
-                                            else {
-                                                sql = "SELECT * " +
-                                                    "FROM guild_disabled_commands " +
-                                                    "WHERE guild_id=" + mysql.escape(guild.id);
-                                                mysql.query(sql, function (err, disabled_commands) {
-                                                    if (err) { console.log(err); res.sendStatus(500); }
-                                                    else {
-                                                        res.render('random', { req, prefix, guild, disabled_categories, commands, disabled_commands });
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
+                let disabledCategories = await mysql.query(sql);
+                disabledCategories = disabledCategories[0];
+
+                // Commands
+                sql = nws`SELECT *
+                    FROM const_commands
+                    WHERE category_id=${mysql.escape(5)}
+                    ORDER BY name ASC`; // Fun
+
+                let commands = await mysql.query(sql);
+                commands = commands[0];
+
+                // Disabled commands
+                sql = nws`SELECT *
+                    FROM guild_disabled_commands
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let disabledCommands = await mysql.query(sql);
+                disabledCommands = disabledCommands[0];
+
+                res.render('fun', { req, prefix, guild, disabledCategories, commands, disabledCommands });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
-    router.get('*', isAuthorized, (req, res) => {
-        var pathArray = req.originalUrl.split('/');
-        var id = pathArray[pathArray.length - 1].split("?")[0];
+    async function renderInteraction(req, res) {
+        try {
+            let id = getCurrentGuildId2(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
 
-        get_authorization(req, id, mysql, bot, function (is_authorized) {
-            if (is_authorized) {
-                var rendered = false;
-                var guilds = req.user.guilds;
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let prefix = await getPrefix(req, mysql, id);
 
-                if (guilds === undefined)
-                    res.render('404', { req });
-                else {
-                    guilds.forEach(guild => {
-                        if (guild.id === id) {
-                            rendered = true;
+                // Disabled categories
+                sql = nws`SELECT *
+                    FROM guild_disabled_categories
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND category_id=${mysql.escape(6)}`; // Interaction
 
-                            var sql = "SELECT prefix, language_code, timezone_id " +
-                                "FROM guilds " +
-                                "WHERE guild_id=" + mysql.escape(guild.id);
+                let disabledCategories = await mysql.query(sql);
+                disabledCategories = disabledCategories[0];
 
-                            mysql.query(sql, function (err, guilds) {
-                                if (err) throw err;
-                                else {
-                                    sql = "SELECT * " +
-                                        "FROM guild_disabled_features " +
-                                        "WHERE guild_id=" + mysql.escape(guild.id);
+                // Commands
+                sql = nws`SELECT *
+                    FROM const_commands
+                    WHERE category_id=${mysql.escape(6)}
+                    ORDER BY name ASC`; // Interaction
 
-                                    mysql.query(sql, function (err, disabled_features) {
-                                        if (err) throw err;
-                                        else {
-                                            sql = "SELECT * " +
-                                                "FROM guild_disabled_categories " +
-                                                "WHERE guild_id=" + mysql.escape(guild.id);
+                let commands = await mysql.query(sql);
+                commands = commands[0];
 
-                                            mysql.query(sql, function (err, disabled_categories) {
-                                                if (err) throw err;
-                                                else {
-                                                    sql = "SELECT * " +
-                                                        "FROM guild_mod_roles " +
-                                                        "WHERE guild_id=" + mysql.escape(guild.id);
+                // Disabled commands
+                sql = nws`SELECT *
+                    FROM guild_disabled_commands
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
 
-                                                    mysql.query(sql, function (err, mod_roles) {
-                                                        if (err) throw err;
-                                                        else {
-                                                            sql = "SELECT * " +
-                                                                "FROM const_timezones";
+                let disabledCommands = await mysql.query(sql);
+                disabledCommands = disabledCommands[0];
 
-                                                            mysql.query(sql, function (err, timezones) {
-                                                                if (err) throw err;
-                                                                else {
-                                                                    sql = "SELECT * " +
-                                                                        "FROM const_languages";
-
-                                                                    mysql.query(sql, function (err, languages) {
-                                                                        if (err) throw err;
-                                                                        else {
-                                                                            let botGuild = bot.guilds.cache.get(guild.id);
-                                                                            res.render('guild', { req, guild, guilds, disabled_features, disabled_categories, mod_roles, timezones, botGuild, languages });
-                                                                        }
-                                                                    });
-                                                                }
-                                                            });
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
+                res.render('interaction', { req, prefix, guild, disabledCategories, commands, disabledCommands });
             } else res.render('404', { req });
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
+
+    async function renderRandom(req, res) {
+        try {
+            let id = getCurrentGuildId2(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
+
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                let prefix = await getPrefix(req, mysql, id);
+
+                // Disabled categories
+                sql = nws`SELECT *
+                    FROM guild_disabled_categories
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                    AND category_id=${mysql.escape(7)}`; // Random
+
+                let disabledCategories = await mysql.query(sql);
+                disabledCategories = disabledCategories[0];
+
+                // Commands
+                sql = nws`SELECT *
+                    FROM const_commands
+                    WHERE category_id=${mysql.escape(7)}
+                    ORDER BY name ASC`; // Random
+
+                let commands = await mysql.query(sql);
+                commands = commands[0];
+
+                // Disabled commands
+                sql = nws`SELECT *
+                    FROM guild_disabled_commands
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let disabledCommands = await mysql.query(sql);
+                disabledCommands = disabledCommands[0];
+
+                res.render('random', { req, prefix, guild, disabledCategories, commands, disabledCommands });
+            } else res.render('404', { req });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
+
+    async function renderGuildDashboard(req, res) {
+        try {
+            let id = getCurrentGuildId1(req, res);
+            let isAuthorized = await getAuthorization(bot, req, id, mysql);
+            let guild = findGuildById(req.user.guilds, id);
+
+            if (isAuthorized && req.user.discordId !== id && guild) {
+                // Guilds
+                let sql = nws`SELECT prefix, language_code, timezone_id
+                    FROM guilds
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let guilds = await mysql.query(sql);
+                guilds = guilds[0];
+
+                // Disabled features
+                sql = nws`SELECT *
+                    FROM guild_disabled_features
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let disabledFeatures = await mysql.query(sql);
+                disabledFeatures = disabledFeatures[0];
+
+                // Disabled categories
+                sql = nws`SELECT *
+                    FROM guild_disabled_categories
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let disabledCategories = await mysql.query(sql);
+                disabledCategories = disabledCategories[0];
+
+                // Mod roles
+                sql = nws`SELECT *
+                    FROM guild_mod_roles
+                    WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let modRoles = await mysql.query(sql);
+                modRoles = modRoles[0];
+
+                // Timezones
+                sql = nws`SELECT *
+                    FROM const_timezones`;
+
+                let timezones = await mysql.query(sql);
+                timezones = timezones[0];
+
+                // Languages
+                sql = nws`SELECT *
+                    FROM const_languages`;
+
+                let languages = await mysql.query(sql);
+                languages = languages[0];
+
+                // Guild object from client
+                let botGuild = bot.guilds.cache.get(guild.id);
+
+                res.render('guild', { req, guild, guilds, disabledFeatures, disabledCategories, modRoles, timezones, botGuild, languages });
+            } else res.render('404', { req });
+        } catch (err) {
+            console.error(err);
+            res.render('500', { req });
+        }
+    }
 
     return router;
 };

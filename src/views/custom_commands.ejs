@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Custom Commands</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Custom Commands">
@@ -27,29 +27,26 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Custom Commands">
 <meta property="twitter:description" content="Create custom commands!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
 <script>
-  var botRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
-  var botChannels = <%- JSON.stringify(botGuild.channels.cache) %>;
-  var var_is_supporter = <%- JSON.stringify(isSupporter); %>;
-  var var_color_code = <%- JSON.stringify(color_code); %>;
-  var var_guild = <%- JSON.stringify(guild); %>;
-  var varCcs = <%- JSON.stringify(ccs); %>;
-  var varCcEmbeds = <%- JSON.stringify(ccEmbeds); %>;
-  var varCcFields = <%- JSON.stringify(ccFields); %>;
-  var var_timestamp_tzs = <%- JSON.stringify(timestamp_tz_formats); %>;
-  var var_prefix = <%- JSON.stringify(prefix); %>;
-  var varCommandsAmount = <%- JSON.stringify(commandsAmount); %>;
-  var varCcAliases = <%- JSON.stringify(ccAliases); %>;
+  var globalBotRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
+  var globalBotChannels = <%- JSON.stringify(botGuild.channels.cache) %>;
+  var globalIsSupporter = <%- JSON.stringify(isSupporter); %>;
+  var globalColorCode = <%- JSON.stringify(colorCode); %>;
+  var globalGuild = <%- JSON.stringify(guild); %>;
+  var globalCcs = <%- JSON.stringify(ccs); %>;
+  var globalCcEmbeds = <%- JSON.stringify(ccEmbeds); %>;
+  var globalCcFields = <%- JSON.stringify(ccFields); %>;
+  var globalTimestampTzs = <%- JSON.stringify(timestampTzFormats); %>;
+  var globalPrefix = <%- JSON.stringify(prefix); %>;
+  var globalCommandsAmount = <%- JSON.stringify(commandsAmount); %>;
+  var globalCcAliases = <%- JSON.stringify(ccAliases); %>;
 </script>
 
-<% var plugin = 'checked'; %>
-<% if (disabled_plugins[0]) { %>
-<% plugin = '';  %>
-<% } %>
+<% const plugin = disabledPlugins[0] ? '' : 'checked'; %>
 
 <div class="main-wrapper">
   <div class="dash-user-wrapper">
@@ -68,10 +65,10 @@
     <div class="main-content banner">
       <div class="padding-top padding-bottom padding-left padding-right">
         <div class="global-switch">
-          <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+          <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
           <span><i class="fas fa-user-cog"></i> Custom Commands Plugin</span>
           <label class="switch">
-            <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'customcommands')" <%= plugin %> />
+            <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'customcommands')" <%= plugin %> />
             <span class="slider round"></span>
           </label>
         </div>
@@ -79,41 +76,42 @@
     </div>
     <div class="com-sub-featured">
       <div class="padding-top padding-bottom padding-left padding-right">
+        <div id="dismissible-item-delete" data-component="dismissible-item" data-type="error" data-value="Couldn't delete custom command."></div>
 
         <!-- Trigger/Open The Modal -->
-        <button id="reactionrole-modal-create-button" class="btn-redirect center-button mobile-right" onclick="open_modal_create_cc(this);">+ Create</button>
+        <button id="reactionrole-modal-create-button" class="btn-redirect center-button mobile-right" onclick="openModalCreateCc(this);">+ Create</button>
 
-        <div id="cc_amount_wrapper">
-          <div id="cc_amount">
+        <div id="cc-amount-wrapper">
+          <div id="cc-amount">
             Total commands: <%= commandsAmount %> / 100
           </div>
         </div>
 
         <!-- The message list -->
         <% if (ccs.length > 0) { %>
-        <% for (let i = 0; i < ccs.length; i++) { %>
-        <% const cc = ccs[i]; %>
-        <div class="cc_msg">
-          <div class="cc_invoke">
+        <%   for (let i = 0; i < ccs.length; i++) { %>
+          <%     const cc = ccs[i];  %>
+        <div class="cc-msg">
+          <div class="cc-invoke">
             <%= prefix %><%= cc.invoke %>
           </div>
-          <div class="cc_msg_type">
+          <div class="cc-msg-type">
             <%= cc.normal_msg ? 'Normal' : 'Embed' %>
           </div>
           <div class="edit-buttons">
             <div class="edit-button">
-              <button id="reactionrole-modal-edit-button" class="btn-redirect empty" name="<%= cc.invoke %>" onclick="open_modal_edit_cc(this);">
+              <button id="reactionrole-modal-edit-button" class="btn-redirect empty" name="<%= cc.invoke %>" onclick="openModalEditCc(this);">
                 <i class="fas fa-edit"></i> <span class="hide-on-mobile">Edit</span>
               </button>
             </div>
             <div class="delete-button">
-              <button id="reactionrole-delete-button" class="btn-redirect btn-danger empty" name="<%= guild.id %>|<%= cc.invoke %>" onclick="delete_cc(this);">
+              <button id="reactionrole-delete-button" class="btn-redirect btn-danger empty" name="<%= guild.id %>|<%= cc.invoke %>" onclick="deleteCc(this);">
                 <i class="fas fa-trash"></i> <span class="hide-on-mobile">Delete</span>
               </button>
             </div>
           </div>
         </div>
-        <% } %>
+        <%   } %>
         <% } %>
 
         <div id="modals-wrapper">

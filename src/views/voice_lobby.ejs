@@ -1,4 +1,4 @@
-<%- include('partials/header-1') -%>
+<%- include('partials/header_1') -%>
 <!-- Primary Meta Tags -->
 <title>Servant | Dashboard: <%= guild.name %> — Moderation: Voice Lobby</title>
 <meta name="title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Voice Lobby">
@@ -27,14 +27,11 @@
 <meta property="twitter:title" content="Servant | Dashboard: <%= guild.name %> — Moderation: Voice Lobby">
 <meta property="twitter:description" content="Easy voice channel management!">
 <meta property="twitter:image" content="https://i.imgur.com/lLuoClj.jpg">
-<%- include('partials/header-2') -%>
+<%- include('partials/header_2') -%>
 <%- include('partials/nav') -%>
-<%- include('partials/nav-highlights/nav-dash') -%>
+<%- include('partials/nav_highlights/nav_dash') -%>
 
-<% var plugin = 'checked'; %>
-<% if (disabled_plugins[0]) { %>
-<% plugin = '';  %>
-<% } %>
+<% const plugin = disabledPlugins[0] ? '' : 'checked'; %>
 
 <div class="main-wrapper">
     <div class="dash-user-wrapper">
@@ -53,10 +50,10 @@
         <div class="main-content banner">
             <div class="padding-top padding-bottom padding-left padding-right">
                 <div class="global-switch">
-                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Error: Couldn't update plugin toggle."></div>
+                    <div id="dismissible-item-plugins" data-component="dismissible-item" data-type="error" data-value="Couldn't update plugin toggle."></div>
                     <span><i class="fas fa-user-cog"></i> Voice Lobby Plugin</span>
                     <label class="switch">
-                        <input name="<%= guild.id %>" type="checkbox" onclick="submit_plugins(this, 'voicelobby')" <%= plugin %>>
+                        <input name="<%= guild.id %>" type="checkbox" onclick="submitPlugins(this, 'voicelobby')" <%= plugin %>>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -82,7 +79,7 @@
                     </div>
                 </div>
                 <div class="padding-top padding-bottom padding-left padding-right">
-                    <form action="/submit/voicelobby" method="POST" id="form_voicelobby">
+                    <form action="/submit/voice-lobby" method="POST" id="form-voice-lobby">
                         <div class="settings-disclaimer">
                             Declare voice channels as "lobby" that will create temporary user specific voice channels upon joining.<br />
                             The temporary voice channels will be deleted once they are empty.
@@ -90,26 +87,24 @@
                             <br />
                             <span class="multiple-select-label">Voice Lobbies</span>
 
-                            <select onchange="submit_voicelobby();" id="lobby_channels" name="lobby_channels" data-placeholder="Select voice channels..." multiple class="chosen-select">
+                            <select onchange="submitVoicelobby();" id="lobby-channels" name="lobby-channels" data-placeholder="Select voice channels..." multiple class="chosen-select">
                                 <% botGuild.channels.cache.forEach(channel => { %>
-                                <% if (channel.type === 'voice' && channel.viewable) { %>
-
-                                <% let selected = ""; %>
-                                <% voicelobbies.forEach(lobby => { %>
-                                <% if (lobby.vc_id === channel.id) { %>
-                                <% selected = "selected"; %>
-                                <% } %>
-                                <% }); %>
-
+                                <%      if (channel.type === 'voice' && channel.viewable) { %>
+                                <%          let selected = ""; %>
+                                <%          voiceLobbies.forEach(lobby => { %>
+                                <%              if (lobby.vc_id === channel.id) { %>
+                                <%                  selected = "selected"; %>
+                                <%              } %>
+                                <%          }); %>
                                 <option value="<%= channel.id %>" <%= selected %>>
                                     #<%= channel.name %> (<%= channel.parent.name %>)
                                 </option>
-                                <% } %>
+                                <%      } %>
                                 <% }); %>
                             </select>
                         </div>
                         <!-- to include it in url params -->
-                        <input type="hidden" id="guild_id" name="guild_id" value="<%= guild.id %>" />
+                        <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                     </form>
                 </div>
             </div>

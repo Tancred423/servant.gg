@@ -32,7 +32,7 @@
 <%- include('partials/nav_highlights/nav_dash') -%>
 
 <% 
-const plugin = disabledPlugins[0] = '' : 'checked';
+const plugin = disabledPlugins[0] ? '' : 'checked';
 const leave = leaves.length > 0 ? leaves[0] : undefined;
 const leaveMessage = leave ? leave.msg : 'We are sorry to see you go!';
 const tcId = leave ? leave.tc_id : '0';

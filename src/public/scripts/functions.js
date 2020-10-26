@@ -113,15 +113,17 @@ module.exports = {
 
         let servantsKingdom = await bot.guilds.fetch('436925371577925642');
         if (servantsKingdom) {
-            let member = await servantsKingdom.members.fetch(req.user.discordId);
-            if (member) {
-                let memberRoles = member.roles.cache;
-                if (memberRoles) {
-                    memberRoles.forEach(memberRole => {
-                        if (memberRole.id == '715557625244155994') {
-                            isSupporter = true;
-                        }
-                    });
+            if (servantsKingdom.member(req.user.discordId)) {
+                let member = await servantsKingdom.members.fetch(req.user.discordId);
+                if (member) {
+                    let memberRoles = member.roles.cache;
+                    if (memberRoles) {
+                        memberRoles.forEach(memberRole => {
+                            if (memberRole.id == '715557625244155994') {
+                                isSupporter = true;
+                            }
+                        });
+                    }
                 }
             }
         }

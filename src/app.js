@@ -34,7 +34,7 @@ const submitRoute = require('./routes/submit')(bot);
 const leaderboardRoute = require('./routes/leaderboard')(bot);
 
 app.use(session({
-    secret: 'some random secret',
+    secret: process.env.SESSION_SECRET,
     cookie: {
         maxAge: 60000 * 60 * 24
     },

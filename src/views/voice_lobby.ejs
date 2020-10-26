@@ -89,6 +89,7 @@
 
                             <select onchange="submitVoicelobby();" id="lobby-channels" name="lobby-channels" data-placeholder="Select voice channels..." multiple class="chosen-select">
                                 <% botGuild.channels.cache.forEach(channel => { %>
+                                <%  if (channel !== null) { %>
                                 <%      if (channel.type === 'voice' && channel.viewable) { %>
                                 <%          let selected = ""; %>
                                 <%          voiceLobbies.forEach(lobby => { %>
@@ -100,6 +101,7 @@
                                     #<%= channel.name %> (<%= channel.parent.name %>)
                                 </option>
                                 <%      } %>
+                                <%  } %>
                                 <% }); %>
                             </select>
                         </div>

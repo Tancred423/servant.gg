@@ -348,7 +348,7 @@ module.exports = function (bot) {
     }
 
     ////////////////////////////////////////////
-    // Async show-functions
+    // Async submit-functions
     ////////////////////////////////////////////
 
     async function submitGuild(req, res) {

@@ -3303,7 +3303,7 @@ function openModalCreate() {
 
 
         globalChannels.forEach(channel => {
-            if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) {
+            if (channel !== null && ((channel.type === 'text' || channel.type === 'news') && channel.viewable)) {
                 html +=
                     '                                <option value="' + channel.id + '">#' + channel.name + (channel.parentName ? ' (' + channel.parentName + ')' : '') + '</option>';
             }
@@ -3617,7 +3617,7 @@ function openModalEdit(button) {
 
                 // Text channel options
                 globalChannels.forEach(channel => {
-                    if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) {
+                    if (channel !== null && ((channel.type === 'text' || channel.type === 'news') && channel.viewable)) {
                         html +=
                             '                                <option value="' + channel.id + '">#' + channel.name + (channel.parentName ? ' (' + channel.parentName + ')' : '') + '</option>';
                     }

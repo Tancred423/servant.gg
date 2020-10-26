@@ -590,7 +590,7 @@ module.exports = (bot) => {
                 // Guild object from client
                 let botGuild = bot.guilds.cache.get(guild.id);
 
-                res.render('leave', { req, guild, bot, botGuild, leaves, disabledPlugins })
+                res.render('leave', { req, guild, bot, botGuild, leaves, disabledPlugins });
             } else res.render('404', { req });
         } catch (err) {
             console.error(err);

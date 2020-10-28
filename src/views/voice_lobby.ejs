@@ -98,7 +98,7 @@
                                 <%              } %>
                                 <%          }); %>
                                 <option value="<%= channel.id %>" <%= selected %>>
-                                    #<%= channel.name %> (<%= channel.parent.name %>)
+                                    #<%= channel.name %><%= channel.parent !== null ? ` (${channel.parent.name}` : '' %>
                                 </option>
                                 <%      } %>
                                 <%  } %>

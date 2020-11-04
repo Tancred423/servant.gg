@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '/var/www/servant.gg/.env' });
 const DiscordStrategy = require('passport-discord').Strategy;
 const passport = require('passport');
 const DiscordUser = require('../models/DiscordUser');

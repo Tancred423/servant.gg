@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: '/var/www/servant.gg/.env' });
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3001;

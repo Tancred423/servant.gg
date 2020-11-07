@@ -267,8 +267,505 @@ function openComm(evt, commName) {
     evt.currentTarget.className += " active";
 }
 
-if (document.getElementById("defaultOpen") !== null)
-    document.getElementById("defaultOpen").click();
+// Collapsibles on help page
+$(document).ready(() => {
+    const pathname = window.location.pathname;
+    console.log(pathname)
+    if (pathname === '/help') {
+        const location = window.location.href;
+        const idx = location.indexOf('#')
+        const hash = idx != -1 ? location.substring(idx + 1) : '';
+        console.log(hash)
+
+        if (hash) {
+            const elems = document.querySelectorAll('.collapsible');
+            const instances = M.Collapsible.init(elems);
+            let instance;
+
+            switch (hash) {
+                // Standard
+                case 'botinfo':
+                case 'about':
+                    clickDefaultTab('standard');
+                    instance = instances[0];
+                    instance.open(0);
+                    break;
+
+                case 'help':
+                case 'h':
+                    clickDefaultTab('standard');
+                    instance = instances[0];
+                    instance.open(1);
+                    break;
+
+                case 'ping':
+                case 'pong':
+                case 'latency':
+                    clickDefaultTab('standard');
+                    instance = instances[0];
+                    instance.open(2);
+                    break;
+
+                case 'supporter':
+                case 'patreon':
+                case 'patron':
+                case 'donation':
+                case 'donate':
+                case 'serverboost':
+                case 'boost':
+                    clickDefaultTab('standard');
+                    instance = instances[0];
+                    instance.open(3);
+                    break;
+
+                // Moderation
+                case 'clear':
+                case 'clean':
+                case 'remove':
+                case 'delete':
+                case 'purge':
+                    clickDefaultTab('moderation');
+                    instance = instances[1];
+                    instance.open(0);
+                    break;
+
+                case 'editembed':
+                    clickDefaultTab('moderation');
+                    instance = instances[1];
+                    instance.open(1);
+                    break;
+
+                // Utility
+                case 'customcommands':
+                case 'customcommand':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(0);
+                    break;
+
+                case 'giveaway':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(1);
+                    break;
+
+                case 'poll':
+                case 'voting':
+                case 'vote':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(2);
+                    break;
+
+                case 'quickpoll':
+                case 'quickvoting':
+                case 'quickvote':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(3);
+                    break;
+
+                case 'rating':
+                case 'rate':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(4);
+                    break;
+
+                case 'remindme':
+                case 'reminder':
+                case 'alarm':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(5);
+                    break;
+
+                case 'setbirthday':
+                case 'setbday':
+                case 'addbirthday':
+                case 'addbday':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(6);
+                    break;
+
+                case 'signup':
+                case 'event':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(7);
+                    break;
+
+                case 'timezone':
+                    clickDefaultTab('utility');
+                    instance = instances[2];
+                    instance.open(8);
+                    break;
+
+                // Fun
+                case 'achievements':
+                case 'achievement':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(0);
+                    break;
+
+                case 'avatar':
+                case 'ava':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(1);
+                    break;
+
+                case 'baguette':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(2);
+                    break;
+
+                case 'bubblewrap':
+                case 'bubble':
+                case 'wrap':
+                case 'pop':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(3);
+                    break;
+
+                case 'coinflip':
+                case 'cointoss':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(4);
+                    break;
+
+                case 'commands':
+                case 'command':
+                case 'mostusedcommands':
+                case 'mostusedcommand':
+                case 'muc':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(5);
+                    break;
+
+                case 'flip':
+                case 'unflip':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(6);
+                    break;
+
+                case 'love':
+                case 'ship':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(7);
+                    break;
+
+                case 'mirror':
+                case 'unmirror':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(8);
+                    break;
+
+                case 'profile':
+                case 'level':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(9);
+                    break;
+
+                case 'tictactoe':
+                case 'ttt':
+                    clickDefaultTab('fun');
+                    instance = instances[3];
+                    instance.open(10);
+                    break;
+
+                // Interaction                    
+                case 'beg':
+                case 'please':
+                case 'pls':
+                case 'plz':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(0);
+                    break;
+
+                case 'birthday':
+                case 'bday':
+                case 'happybirthday':
+                case 'happybday':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(1);
+                    break;
+
+                case 'bite':
+                case 'nibble':
+                case 'nom':
+                case 'munch':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(2);
+                    break;
+
+                case 'bully':
+                case 'booli':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(3);
+                    break;
+
+                case 'cheers':
+                case 'toast':
+                case 'prost':
+                case 'prosit':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(4);
+                    break;
+
+                case 'cookie':
+                case 'biscuit':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(5);
+                    break;
+
+                case 'cop':
+                case 'police':
+                case 'jail':
+                case 'arrest':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(6);
+                    break;
+
+                case 'dab':
+                case 'yeet':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(7);
+                    break;
+
+                case 'f':
+                case 'respect':
+                case 'respects':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(8);
+                    break;
+
+                case 'flex':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(9);
+                    break;
+
+                case 'highfive':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(10);
+                    break;
+
+                case 'hug':
+                case 'cuddle':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(11);
+                    break;
+
+                case 'kiss':
+                case 'smooch':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(12);
+                    break;
+
+                case 'lick':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(13);
+                    break;
+
+                case 'pat':
+                case 'pet':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(14);
+                    break;
+
+                case 'poke':
+                case 'boop':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(15);
+                    break;
+
+                case 'shame':
+                case 'cersei':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(16);
+                    break;
+
+                case 'slap':
+                case 'hit':
+                case 'punch':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(17);
+                    break;
+
+                case 'wave':
+                case 'greet':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(18);
+                    break;
+
+                case 'wink':
+                    clickDefaultTab('interaction');
+                    instance = instances[4];
+                    instance.open(19);
+                    break;
+
+                // Random
+                case 'random':
+                case 'imgur':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(0);
+                    break;
+
+                case 'bird':
+                case 'birb':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(1);
+                    break;
+
+                case 'cat':
+                case 'catto':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(2);
+                    break;
+
+                case 'dog':
+                case 'doggo':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(3);
+                    break;
+
+                case 'fennec':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(4);
+                    break;
+
+                case 'fox':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(5);
+                    break;
+
+                case 'frog':
+                case 'froggo':
+                case 'arenanet':
+                case 'anet':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(6);
+                    break;
+
+                case 'koala':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(7);
+                    break;
+
+                case 'panda':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(8);
+                    break;
+
+                case 'pikachu':
+                case 'pika':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(9);
+                    break;
+
+                case 'redpanda':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(10);
+                    break;
+
+                case 'sloth':
+                case 'hirik0':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(11);
+                    break;
+
+                case 'wolf':
+                case 'wulf':
+                    clickDefaultTab('random');
+                    instance = instances[5];
+                    instance.open(12);
+                    break;
+
+                default:
+                    clickDefaultTab('standard');
+                    break;
+            }
+        } else {
+            clickDefaultTab('standard');
+        }
+    }
+});
+
+function clickDefaultTab(tab) {
+    switch (tab) {
+        case 'moderation':
+            if (document.getElementById('tab-moderation') !== null)
+                document.getElementById('tab-moderation').click();
+            break;
+
+        case 'utility':
+            if (document.getElementById('tab-utility') !== null)
+                document.getElementById('tab-utility').click();
+            break;
+
+        case 'fun':
+            if (document.getElementById('tab-fun') !== null)
+                document.getElementById('tab-fun').click();
+            break;
+
+        case 'interaction':
+            if (document.getElementById('tab-interaction') !== null)
+                document.getElementById('tab-interaction').click();
+            break;
+
+        case 'random':
+            if (document.getElementById('tab-random') !== null)
+                document.getElementById('tab-random').click();
+            break;
+
+        default:
+            if (document.getElementById('tab-standard') !== null)
+                document.getElementById('tab-standard').click();
+            break;
+    }
+}
+
 
 ////////////////////////////////////////////
 // DASHBOARD
@@ -3602,6 +4099,7 @@ function openModalEdit(button) {
                     '            <div id="dismissible-item-error-edit" data-component="dismissible-item" data-type="error" data-value="Something went wrong."></div>' +
                     '            <div id="dismissible-item-error-permission" data-component="dismissible-item" data-type="error" data-value="I cannot write in that text channel."></div>' +
                     '            <div id="dismissible-item-error-tc" data-component="dismissible-item" data-type="error" data-value="I cannot find that text channel."></div>' +
+                    '            <div id="dismissible-item-error-msg" data-component="dismissible-item" data-type="error" data-value="I cannot find that message."></div>' +
                     '            <div class="embed-warning">' +
                     '                If you refresh or quit the page, your progress will be lost!' +
                     '            </div>' +
@@ -4105,6 +4603,10 @@ function openModalEdit(button) {
 
                                 case 403:
                                     $('#dismissible-item-error-tc').addClass('dismiss'); // "I cannot find that text channel."
+                                    break;
+
+                                case 405:
+                                    $('#dismissible-item-error-msg').addClass('dismiss'); // "I cannot find that message."
                                     break;
 
                                 case 500:

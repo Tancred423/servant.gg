@@ -1,4 +1,6 @@
-require('dotenv').config({ path: '/var/www/servant.gg/.env' });
+global.devMode = false;
+
+require('dotenv').config({ path: devMode ? 'D:/OneDrive/Documents/Programming/SERVANT GROUP/servant.gg/.env' : '/var/www/servant.gg/.env' });
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3001;

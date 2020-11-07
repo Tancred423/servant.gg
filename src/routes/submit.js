@@ -295,6 +295,7 @@ module.exports = function (bot) {
             "quickpoll", "quickvote", "quickvoting",
             "rate", "rating",
             "remindme", "alarm",
+            "setbirthday", "setbday", "addbirthday", "addbday",
             "signup", "event",
             "timezone",
             // Fun
@@ -2087,8 +2088,23 @@ module.exports = function (bot) {
                 let tcIds = await mysql.query(sql);
                 tcIds = tcIds[0];
 
+                console.log(tcIds.length)
                 if (tcIds.length > 0) {
-                    let tcId = tcIds[0].tc_id;
+                    const tcId = tcIds[0].tc_id;
+
+                    // Check if message still exists
+                    let tcTest = botGuild.channels.cache.get(tcId);
+                    if (!tcTest) {
+                        res.sendStatus(404); // I cannot find that channel
+                        return;
+                    }
+
+                    try {
+                        await tcTest.messages.fetch(msgId);
+                    } catch (err) {
+                        res.sendStatus(405); // I cannot find that message
+                        return;
+                    }
 
                     // 2. Delete all database entries form this reaction role message.
                     sql = nws`DELETE FROM reaction_role_messages
@@ -2207,11 +2223,12 @@ module.exports = function (bot) {
             const isAuthorized = await getAuthorization(bot, req, guildId, mysql);
 
             if (isAuthorized) {
-                let guild = await bot.guilds.fetch(guildId);
-                let tc = guild.channels.cache.get(tcId);
-                let message = await tc.messages.fetch(msgId);
-
-                await message.delete();
+                try {
+                    let guild = await bot.guilds.fetch(guildId);
+                    let tc = guild.channels.cache.get(tcId);
+                    let message = await tc.messages.fetch(msgId);
+                    await message.delete();
+                } catch (ingore) { }
 
                 let sql = nws`DELETE FROM reaction_role_messages
                     WHERE msg_id=${mysql.escape(msgId)}`;

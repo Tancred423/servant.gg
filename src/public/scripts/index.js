@@ -270,12 +270,11 @@ function openComm(evt, commName) {
 // Collapsibles on help page
 $(document).ready(() => {
     const pathname = window.location.pathname;
-    console.log(pathname)
+
     if (pathname === '/help') {
         const location = window.location.href;
         const idx = location.indexOf('#')
         const hash = idx != -1 ? location.substring(idx + 1) : '';
-        console.log(hash)
 
         if (hash) {
             const elems = document.querySelectorAll('.collapsible');

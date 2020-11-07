@@ -2088,7 +2088,6 @@ module.exports = function (bot) {
                 let tcIds = await mysql.query(sql);
                 tcIds = tcIds[0];
 
-                console.log(tcIds.length)
                 if (tcIds.length > 0) {
                     const tcId = tcIds[0].tc_id;
 

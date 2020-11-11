@@ -90,10 +90,8 @@ const flatReq = flat ? 'required' : '';
                 <div class="padding-top padding-bottom padding-left padding-right">
                     <form action="/submit/best-of-quote" method="POST" id="form-boq">
                         <div class="settings-disclaimer">
-                            <div>This is the amount of people who have to vote.<br />
-                                E.g. 40% of the online people have to vote, but at least 10 people!
-                            </div>
-                            <br />
+                            <div class="ms-title">Requirements</div>
+                            <div class="ms-description">This is the amount of people who have to vote.<br />E.g.: 40% of the online people have to vote, but at least 10 people!</div>
                             <div class="form-group">
                                 <input onkeyup="setRequired(this); handlePercentageBoq(this);" type="number" name="percentage" id="percentage" value="<%= percentage %>" <%= percentageReq %>>
                                 <label for="percentage" class="control-label">Percentage of online members</label><i class="bar"></i>
@@ -103,9 +101,10 @@ const flatReq = flat ? 'required' : '';
                                 <label for="flat" class="control-label">Flat amout of members</label><i class="bar"></i>
                             </div>
                         </div>
+
                         <div class="settings-disclaimer">
-                            <div>This is the text channel the best quotes will be posted in.</div>
-                            <br />
+                            <div class="ms-title">Text Channel</div>
+                            <div class="ms-description">This is the text channel the best quotes will be posted in.</div>
                             <div class="form-group">
                                 <% const defaultSelected = tcId === '0' ? 'selected' : ''; %>
                                 <select id="tc" name="tc" onchange="changeTcSel(this); submitBestOfQuote();">
@@ -117,17 +116,18 @@ const flatReq = flat ? 'required' : '';
                                     <%     } %>
                                     <% }); %>
                                 </select>
-                                <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
+                                <i class="bar"></i>
                             </div>
                         </div>
+
                         <div class="settings-disclaimer">
-                            <div>This is the emoji your members will vote with.</div>
-                            <br />
+                            <div class="ms-title">Vote Emoji</div>
+                            <div class="ms-description">This is the emoji your members will vote with.</div>
                             <div class="form-group">
                                 <div class="picker" id="picker-0"><%= emoji %></div>
-                                <div class="picker-label">Emoji</div>
                             </div>
                         </div>
+
                         <!-- to include it in url params -->
                         <input type="hidden" id="guild-id" name="guild-id" value="<%= guild.id %>" />
                     </form>

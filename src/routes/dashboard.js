@@ -384,10 +384,18 @@ module.exports = (bot) => {
                 let disabledPlugins = await mysql.query(sql);
                 disabledPlugins = disabledPlugins[0];
 
+                // Birthday roles
+                sql = nws`SELECT *
+                  FROM guild_birthday_roles
+                  WHERE guild_id=${mysql.escape(guild.id)}`;
+
+                let birthdayRoles = await mysql.query(sql);
+                birthdayRoles = birthdayRoles[0];
+
                 // Guild object from client
                 let botGuild = bot.guilds.cache.get(guild.id);
 
-                res.render('birthday', { req, guild, bot, botGuild, disabledPlugins, guildBirthdays });
+                res.render('birthday', { req, guild, bot, botGuild, disabledPlugins, guildBirthdays, birthdayRoles });
             } else res.render('404', { req });
         } catch (err) {
             console.error(err);
@@ -661,34 +669,50 @@ module.exports = (bot) => {
 
             if (isAuthorized && req.user.discordId !== id && guild) {
                 // Guild livestreams
-                let sql = nws`SELECT *
+                let sql = nws`
+                    SELECT *
                     FROM guild_livestreams
-                    WHERE guild_id=${mysql.escape(guild.id)}`;
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                `;
 
                 let guildLivestreams = await mysql.query(sql);
                 guildLivestreams = guildLivestreams[0];
 
                 // Disabled plugins
-                sql = nws`SELECT id
+                sql = nws`
+                    SELECT id
                     FROM guild_disabled_plugins
                     WHERE guild_id=${mysql.escape(guild.id)}
-                    AND plugin_id=${mysql.escape(8)}`; // livestream
+                    AND plugin_id=${mysql.escape(8)}
+                `; // livestream
 
                 let disabledPlugins = await mysql.query(sql);
                 disabledPlugins = disabledPlugins[0];
 
                 // Guild livestreamers
-                sql = nws`SELECT *
+                sql = nws`
+                    SELECT *
                     FROM guild_livestreamers
-                    WHERE guild_id=${mysql.escape(guild.id)}`;
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                `;
 
                 let guildLivestreamers = await mysql.query(sql);
                 guildLivestreamers = guildLivestreamers[0];
 
+                // Guild livestream ping roles
+                sql = nws`
+                    SELECT *
+                    FROM guild_livestream_ping_roles
+                    WHERE guild_id=${mysql.escape(guild.id)}
+                `;
+
+                let guildLivestreamPingRoles = await mysql.query(sql);
+                guildLivestreamPingRoles = guildLivestreamPingRoles[0];
+
                 // Guild object from client
                 let botGuild = bot.guilds.cache.get(guild.id);
 
-                res.render('livestream', { req, guild, bot, botGuild, disabledPlugins, guildLivestreams, guildLivestreamers });
+                res.render('livestream', { req, guild, bot, botGuild, disabledPlugins, guildLivestreams, guildLivestreamers, guildLivestreamPingRoles });
             } else res.render('404', { req });
         } catch (err) {
             console.error(err);

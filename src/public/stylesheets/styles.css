@@ -1806,9 +1806,18 @@ a.button {
     float: left;
 }
 
-.mod-care {
+.ms-title {
     font-weight: bold;
+    color: var(--discord-blue);
+    margin-bottom: 10px;
+}
+
+.ms-title.warn {
     color: var(--red);
+}
+
+.ms-description {
+    margin-bottom: 10px;
 }
 
 /* btn-redirect */
@@ -3114,6 +3123,13 @@ input:checked+.slider.small:before {
     line-height: 30px;
 }
 
+.command-panel.plugin {
+    max-width: initial;
+    grid-template-columns: auto 100px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .cpm-left {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
@@ -3216,7 +3232,7 @@ input:checked+.slider.small:before {
 }
 
 .container1 .roles {
-    text-align: center;
+    /* text-align: center; */
     margin-top: 10px;
 }
 
@@ -3362,10 +3378,15 @@ textarea {
 .roles.level {
     display: grid;
     grid-template-columns: 15px 150px auto;
+    grid-gap: 5px;
 }
 
 .roles.level .delete-level-role {
     margin-top: 19px;
+}
+
+.roles.level .delete-level-role:hover {
+    cursor: pointer;
 }
 
 .roles.level .chosen-choices {
@@ -3377,6 +3398,25 @@ textarea {
 .livestream, .birthday {
     max-width: 600px;
     margin: 40px auto;
+}
+
+.roles.livestream {
+    display: grid;
+    grid-template-columns: 15px 40% auto;
+    grid-gap: 5px;
+    margin-bottom: 0;
+}
+
+.roles.livestream .delete-livestream-role {
+    margin-top: 19px;
+}
+
+.roles.livestream .delete-livestream-role:hover {
+    cursor: pointer;
+}
+
+.roles.livestream .chosen-choices {
+    background-color: var(--discord-gray-light);
 }
 
 /* Log */

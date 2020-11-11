@@ -33,6 +33,7 @@
 
 <script>
     var globalBotRoles = <%- JSON.stringify(botGuild.roles.cache) %>;
+    var globalStreamerRoles = <%- JSON.stringify(guildLivestreamers) %>;
 </script>
 
 <% 
@@ -92,7 +93,8 @@ const announcement = guildLivestreams.length > 0 ? guildLivestreams[0].announcem
 
                 <form action="/submit/livestream" method="POST" id="form-livestream">
                     <div class="livestream settings-disclaimer">
-                        <div>If toggled on, every member will receive the "live"-role upon going live.</div>
+                        <div class="ms-title">Public Mode</div>
+                        <div class="ms-description">If toggled on, every member will receive the "live"-role upon going live.</div>
                         <div class="command-panel">
                             <span>Public Mode</span>
                             <label class="switch">
@@ -103,8 +105,8 @@ const announcement = guildLivestreams.length > 0 ? guildLivestreams[0].announcem
                     </div>
 
                     <div class="livestream settings-disclaimer">
-                        <div>Members with one of these roles are "streamers". Upon going live, the streamer will receive the "live"-role and an announcement will be posted.</div>
-                        <br /><br />
+                        <div class="ms-title">Streamer Roles</div>
+                        <div class="ms-description">Members with one of these roles are considered "streamers". Upon going live, the streamer will receive the "live"-role and an announcement will be posted.</div>
                         <div class="form-group">
                             <select onchange="handleLivestreamSelect();" id="livestream-roles" name="livestream-roles" data-placeholder="Select roles..." multiple class="chosen-select">
                                 <% botGuild.roles.cache.forEach(role => { %>
@@ -119,14 +121,13 @@ const announcement = guildLivestreams.length > 0 ? guildLivestreams[0].announcem
                                 <%     } %>
                                 <% }); %>
                             </select>
-                            <label for="level-speed" class="control-label level">Streamer Roles</label><i class="bar"></i>
+                            <i class="bar"></i>
                         </div>
                     </div>
 
                     <div class="livestream settings-disclaimer">
-                        <div>The role that streamers (and members if public mode) will receive upon going live</div>
-                        <br />
-                        <br />
+                        <div class="ms-title">Live Role</div>
+                        <div class="ms-description">The role that streamers (and members if public mode) will receive upon going live.</div>
                         <div class="form-group">
                             <select onchange="submitLivestream();" id="livestream-role" name="livestream-role">
                                 <% botGuild.roles.cache.forEach(role => { %>
@@ -136,13 +137,13 @@ const announcement = guildLivestreams.length > 0 ? guildLivestreams[0].announcem
                                 <%     } %>
                                 <% }); %>
                             </select>
-                            <label for="livestream-role" class="control-label level">Live Role</label><i class="bar"></i>
+                            <i class="bar"></i>
                         </div>
                     </div>
 
                     <div class="livestream settings-disclaimer">
-                        <div>This is the text channel the announcement will be posted in.</div>
-                        <br />
+                        <div class="ms-title">Livestream Announcement</div>
+                        <div class="ms-description">This is the text channel the announcement will be posted in.</div>
                         <div class="form-group embed">
                             <select id="tc" name="tc" onchange="changeTcSel(this); submitLivestream();" required>
                                 <% const tcDefaultSelected = tcId == 0 ? 'selected' : ''; %>
@@ -154,24 +155,97 @@ const announcement = guildLivestreams.length > 0 ? guildLivestreams[0].announcem
                                 <%     } %>
                                 <% }); %>
                             </select>
-                            <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
+                            <i class="bar"></i>
                         </div>
                     </div>
 
-                    <div class="livestream settings-disclaimer">
-                        <div>The role that gets pinged upon posting the announcement.</div>
+                    <div class="container1 livestream settings-disclaimer">
+                        <div class="ms-title">Ping Roles</div>
+                        <div class="ms-description">For different streamer roles you can set up ping roles. These will be pinged upon posting the announcement.</div>
+
+                        <div class="btn-redirect empty center-button" onclick="addLivestreamPingRole();">+ Add</div>
                         <br />
-                        <br />
-                        <div class="form-group">
-                            <select onchange="changeTcSel(this); submitLivestream();" id="livestream-ping-role" name="livestream-ping-role">
-                                <% const pingRoleIdSelected = pingRoleId == 0 ? 'selected' : ''; %>
-                                <option value="0" <%= pingRoleIdSelected %>>No role (Announcement without ping)</option>
-                                <% botGuild.roles.cache.forEach(role => { %>
-                                <%     let pingRoleSel = pingRoleId == role.id ? 'selected' : ''; %>
-                                <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= pingRoleSel %>><%= role.name %></option>
-                                <% }); %>
-                            </select>
-                            <label for="livestream-ping-role" class="control-label level">Ping Role</label><i class="bar"></i>
+
+                        <div id="dismissible-item" data-component="dismissible-item" data-type="error" data-value="You cannot set he same role twice."></div>
+
+                        <div id="ping-roles">
+                            <%- include('./partials/array_lib.ejs') %>
+                            <% 
+                            let myPingRoles = new Map(); // Key: [streamerRoleId, streamerRoleId], Value: [pingRoleId, pingRoleId]
+
+                            // Build map like keys were unique
+                            guildLivestreamPingRoles.forEach(pingRole => {
+                                const streamerRoleId = pingRole.streamer_role_id;
+                                const pingRoleId = pingRole.ping_role_id;
+
+                                let overwritten= false;
+
+                                for (const [key, value] of myPingRoles) {
+                                    if (key.equals([streamerRoleId])) {
+                                        myPingRoles.set(key, value.concat([pingRoleId]))
+                                        overwritten = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!overwritten) {
+                                    myPingRoles.set([streamerRoleId], [pingRoleId]);
+                                }
+                            });
+                            
+                            // Concat keys with same value
+                            let myPingRolesNew = new Map(); // Key: [streamerRoleId, streamerRoleId], Value: [pingRoleId, pingRoleId]
+
+                            for (const [key, value] of myPingRoles) {
+                                let overwritten = false;
+
+                                for (const [keyNew, valueNew] of myPingRolesNew) {
+                                    if (value.equals(valueNew)) {
+                                        overwritten = true;
+                                        myPingRolesNew.delete(keyNew);
+                                        myPingRolesNew.set(key.concat(keyNew), valueNew);
+                                        break;
+                                    }
+                                }
+
+                                if (!overwritten) {
+                                    myPingRolesNew.set(key, value);
+                                }
+                            }
+
+                            let i = 1;
+                            for (const [key, value] of myPingRolesNew) {
+                                const streamerRoleIds = key;
+                                const pingRoleIds = value;
+                            %>
+
+                            <div class="roles livestream">
+                                <span class="delete-livestream-role" onclick="deleteLivestreamPingRole(this)"><i class="fas fa-times-circle"></i></span>
+                                <select onchange="handleLivestreamSelect();" id="ping-streamer-roles-<%= i %>" name="ping-streamer-roles-<%= i %>" data-placeholder="Select streamer role(s)..." multiple class="chosen-select">
+                                    <% botGuild.roles.cache.forEach(role => { %>
+                                    <%      if (role.name !== "@everyone") { %>
+                                    <%          guildLivestreamers.forEach(streamerRole => { %>
+                                    <%              if (streamerRole.role_id === role.id) { %>
+                                    <%                  let roleSelected = streamerRoleIds.includes(role.id) ? 'selected' : ''; %>
+                                    <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= roleSelected %>><%= role.name %></option>
+                                    <%              } %>
+                                    <%          }); %>
+                                    <%      } %>
+                                    <% }); %>
+                                </select>
+
+                                <select onchange="handleLivestreamSelect();" id="ping-roles-<%= i %>" name="ping-roles-<%= i %>" data-placeholder="Select ping roles..." multiple class="chosen-select">
+                                    <% botGuild.roles.cache.forEach(role => { %>
+                                    <%     if (role.name !== "@everyone") { %>
+                                    <%         let roleSelected = pingRoleIds.includes(role.id) ? 'selected' : ''; %>
+                                    <option style="color: #<%= role.color.toString(16) %>" value="<%= role.id %>" <%= roleSelected %>><%= role.name %></option>
+                                    <%     } %>
+                                    <% }); %>
+                                </select>
+                            </div>
+
+                            <%     i++; %>
+                            <% }; %>
                         </div>
                     </div>
 

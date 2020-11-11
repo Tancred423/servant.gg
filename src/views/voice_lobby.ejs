@@ -81,11 +81,11 @@
                 <div class="padding-top padding-bottom padding-left padding-right">
                     <form action="/submit/voice-lobby" method="POST" id="form-voice-lobby">
                         <div class="settings-disclaimer">
-                            Declare voice channels as "lobby" that will create temporary user specific voice channels upon joining.<br />
-                            The temporary voice channels will be deleted once they are empty.
-                            <br />
-                            <br />
-                            <span class="multiple-select-label">Voice Lobbies</span>
+                            <div class="ms-title">Voice Lobbies</div>
+                            <div class="ms-description">
+                                Declare voice channels as "lobby" that will create temporary user specific voice channels upon joining.<br />
+                                The temporary voice channels will be deleted once they are empty.
+                            </div>
 
                             <select onchange="submitVoicelobby();" id="lobby-channels" name="lobby-channels" data-placeholder="Select voice channels..." multiple class="chosen-select">
                                 <% botGuild.channels.cache.forEach(channel => { %>

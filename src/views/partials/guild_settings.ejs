@@ -93,7 +93,7 @@
                 </div>
 
                 <div class="settings-disclaimer">
-                    <span class="mod-care"><i class="fas fa-exclamation"></i> CARE <i class="fas fa-exclamation"></i></span><br />
+                    <div class="ms-title warn"><i class="fas fa-exclamation"></i> CARE <i class="fas fa-exclamation"></i></div>
                     Members with one of these roles can use commands from the moderation category and <strong>manage this dashboard of your server</strong>.<br />
                     Treat this carefully like the administrator permission.
                     <br />
@@ -111,7 +111,8 @@
                         <% }); %>
 
                         <% if (role.name !== '@everyone') { %>
-                        <option value="<%= role.id %>" <%= selected %>>
+                        <%      const colorcode = role.color === 0 ? "FFFFFF" : role.color.toString(16); %>
+                        <option value="<%= role.id %>" style="color: #<%= colorcode %>;" <%= selected %>>
                             <%= role.name %>
                         </option>
                         <% } %>

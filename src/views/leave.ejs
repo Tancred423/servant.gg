@@ -87,16 +87,16 @@ const leaveMsgReq = leaveMessage ? 'required' : '';
                 <div class="padding-top padding-bottom padding-left padding-right">
                     <form action="/submit/leave" method="POST" id="form-leave">
                         <div class="settings-disclaimer">
-                            <div>A custom message for leaving members.</div>
-                            <br />
+                            <div class="ms-title">Farewell Message</div>
+                            <div class="ms-description">A custom message for leaving members.</div>
                             <div class="form-group">
                                 <textarea onkeyup="setRequired(this); handleLeaveMsg(this);" id="leave-msg" name="leave-msg" maxlength="2048" <%= leaveMsgReq %>><%= leaveMessage %></textarea>
-                                <label for="leave-msg" class="control-label">Farewell Message</label><i class="bar"></i>
+                                <i class="bar"></i>
                             </div>
                         </div>
                         <div class="settings-disclaimer">
-                            <div>This is the text channel the farewell messages will be posted in.</div>
-                            <br />
+                            <div class="ms-title">Farewell Announcement</div>
+                            <div class="ms-description">This is the text channel the farewell messages will be posted in.</div>
                             <div class="form-group">
                                 <% const defaultSelected = tcId === '0' ? 'selected' : ''; %>
                                 <select id="tc" name="tc" onchange="changeTcSel(this); submitLeave();">
@@ -108,7 +108,7 @@ const leaveMsgReq = leaveMessage ? 'required' : '';
                                     <%     } %>
                                     <% }); %>
                                 </select>
-                                <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
+                                <i class="bar"></i>
                             </div>
                         </div>
                         <!-- to include it in url params -->

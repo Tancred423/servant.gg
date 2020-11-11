@@ -111,8 +111,8 @@ const boostTier = log ? (log.boost_tier ? 'checked' : '') : '';
                 <div class="padding-top padding-bottom padding-left padding-right">
                     <form action="/submit/log" method="POST" id="form-log">
                         <div class="settings-disclaimer">
-                            <div>This is the text channel the log will be posted in.</div>
-                            <br />
+                            <div class="ms-title">Log Channel</div>
+                            <div class="ms-description">This is the text channel the log will be posted in.</div>
                             <div class="form-group">
                                 <% const defaultSelected = tcId === '0' ? 'selected' : ''; %>
                                 <select id="tc" name="tc" onchange="changeTcSel(this); submitLog();">
@@ -125,12 +125,13 @@ const boostTier = log ? (log.boost_tier ? 'checked' : '') : '';
                                     <%     } %>
                                     <% }); %>
                                 </select>
-                                <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
+                                <i class="bar"></i>
                             </div>
                         </div>
 
                         <div class="settings-disclaimer">
-                            <div>What would you like to be notified for?</div>
+                            <div class="ms-title">Log Events</div>
+                            <div class="ms-description">What would you like to be notified for?</div>
                             <div class="log-checkboxes">
                                 <div class="checkbox">
                                     <label>
@@ -141,7 +142,7 @@ const boostTier = log ? (log.boost_tier ? 'checked' : '') : '';
                                 <div class="checkbox">
                                     <label>
                                         <input <%= msgDelete %> id="msg-delete" name="events" type="checkbox" onchange="handleLogChecks();"><i class="helper"></i>
-                                        Message deleted
+                                        Message deleted <span class="red">**</span>
                                     </label>
                                 </div>
                                 <div class="checkbox">
@@ -284,7 +285,8 @@ const boostTier = log ? (log.boost_tier ? 'checked' : '') : '';
                                 </div>
                             </div>
                             <br />
-                            <span class="red">*</span> This can be very spam heavy if you are using the voice lobby plugin.
+                            <span class="red">*</span> This can be very spam heavy if you are using the voice lobby plugin.<br />
+                            <span class="red">**</span> Messages deleted by the clear-command of Servant will not be logged.
                         </div>
 
                         <!-- to include it in url params -->

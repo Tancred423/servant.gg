@@ -90,32 +90,34 @@ const modifier = guildLevels.length > 0 ? guildLevels[0].modifier : '1.00';
                 <form action="/submit/level" method="POST" id="form-level">
                     <br />
 
-                    <div class="command-panel">
-                        <span>Level-up notification</span>
-                        <label class="switch">
-                            <input name="level-up-msg" id="level-up-msg" type="checkbox" onclick="submitLevel()" <%= notificationChecked %>>
-                            <span class="slider round"></span>
-                        </label>
+                    <div class="leveling-speed settings-disclaimer">
+                        <div class="command-panel plugin">
+                            <span>Level-up notification</span>
+                            <label class="switch">
+                                <input name="level-up-msg" id="level-up-msg" type="checkbox" onclick="submitLevel()" <%= notificationChecked %>>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
                     </div>
 
                     <br />
 
                     <div class="leveling-speed settings-disclaimer">
-                        <div>How fast should users gain exp?</div>
-                        <br />
+                        <div class="ms-title">Leveling Speed</div>
+                        <div class="ms-description">How fast should users gain exp?</div>
                         <div id="scale-display"><%= parseFloat(modifier).toFixed(2) %>x <%= modifier == '1.00' ? ' (recommended)' : '' %></div>
                         <div class="form-group">
                             <input onchange="handleLevelSpeed();" required type="range" name="level-speed" id="level-speed" min="0.25" max="4.0" step="0.25" value="<%= modifier %>" oninput="levelScale(this);">
-                            <label for="level-speed" class="control-label level">Leveling Speed</label><i class="bar"></i>
+                            <i class="bar"></i>
                         </div>
                     </div>
 
                     <br />
 
                     <div class="container1 level settings-disclaimer">
-                        <div>Reward users upon a level up with one or more roles. These can be used to climb higher in the member list or unlock channels.</div>
+                        <div class="ms-title">Leveling Rewards</div>
+                        <div class="ms-description">Reward users upon a level up with one or more roles. These can be used to climb higher in the member list or unlock channels.</div>
 
-                        <br />
                         <div class="btn-redirect empty center-button" onclick="addLevelRole();">+ Add</div>
                         <br />
 

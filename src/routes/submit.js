@@ -753,131 +753,169 @@ module.exports = function (bot) {
 
     async function submitBirthday(req, res) {
         try {
-            const guildId = req.body.guildId;
-            const servantBday = req.body.servantBday;
-            const announcementTcId = req.body.announcementTcId;
-            const listTcId = req.body.listTcId;
-            const userId = req.body.userId;
+            const userId = req.user.discordId;
+            const { guildId, servantBday, announcementTcId, listTcId } = req.body;
+            const birthdayRoles = JSON.parse(req.body.birthdayRoles);
 
             const isAuthorized = await getAuthorization(bot, req, guildId, mysql);
 
             if (isAuthorized) {
                 // Birthdays
-                let sql = nws`SELECT *
+                let sql = nws`
+                    SELECT *
                     FROM guild_birthdays
-                    WHERE guild_id=${mysql.escape(guildId)}`;
+                    WHERE guild_id=${mysql.escape(guildId)}
+                `;
 
                 let birthdays = await mysql.query(sql);
                 birthdays = birthdays[0];
 
+                const guild = await bot.guilds.fetch(guildId);
+                const channel = guild.channels.cache.get(listTcId);
 
-                let guild = await bot.guilds.fetch(guildId);
-                let channel = guild.channels.cache.get(listTcId);
+                let messageId = 0;
+
+                let postMessage = false;
 
 
                 if (birthdays.length > 0) {
                     // Has birthdays
-                    let birthday = birthdays[0];
-                    if (birthday.list_tc_id == listTcId) {
-                        // Save changes to db
-                        await setBirthdayDb(res, mysql, guildId, listTcId, birthday.list_msg_id, userId, servantBday, announcementTcId);
-                        return; // Do not send a list
-                    } else {
+                    const birthday = birthdays[0];
+
+                    // Check for birthday list to change the channel
+                    if (birthday.list_tc_id != listTcId) {
                         // Channels changes, so we delete the old message
-                        let oldChannel = guild.channels.cache.get(birthday.list_tc_id);
+                        const oldChannel = guild.channels.cache.get(birthday.list_tc_id);
                         if (oldChannel) {
-                            // Delete list from old channel
+                            // Delete old birthday list
                             try {
                                 let oldMessage = await oldChannel.messages.fetch(birthday.list_msg_id);
                                 await oldMessage.delete();
+                                postMessage = true;
                             } catch (err) {
                                 if (err.code !== Discord.Constants.APIErrors.UNKNOWN_MESSAGE) {
-                                    console.log(err);
                                     res.sendStatus(500);
+                                    return;
                                 }
                             }
                         }
+                    } else {
+                        messageId = birthday.list_msg_id;
+                        postMessage = false;
                     }
+                } else if (listTcId > 0) {
+                    postMessage = true;
                 }
 
-                // Send Birthday List
-                let guildIcon = guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null;
+                if (postMessage) {
+                    // Send new birthay list
+                    const guildIcon = guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null;
+                    const colorCode = await getUserColorCode(mysql, userId);
 
-                let colorCode = await getUserColorCode(mysql, userId);
+                    let embed = new Discord.MessageEmbed()
+                        .setColor(colorCode)
+                        .setAuthor(guild.name.endsWith('s') ? `${guild.name}' birthdays` : `${guild.name}'s birthdays`, guildIcon, null)
+                        .setDescription('Add your birthday in the [dashboard](https://servant.gg/dashboard)!')
+                        .setFooter('As of', 'https://i.imgur.com/PA3Xzgu.png')
+                        .setTimestamp(new Date());
 
-                let embed = new Discord.MessageEmbed()
-                    .setColor(colorCode)
-                    .setAuthor(guild.name.endsWith('s') ? `${guild.name}' birthdays` : `${guild.name}'s birthdays`, guildIcon, null)
-                    .setDescription("Add your birthday in the [dashboard](https://servant.gg/dashboard)!")
-                    .setFooter("As of", "https://i.imgur.com/PA3Xzgu.png")
-                    .setTimestamp(new Date());
+                    const birthdays2 = await getBirthdays(mysql, guild.id, servantBday);
+                    let birthdayCountdowns = await getBirthdayCountdowns(birthdays2);
 
-                let birthdays2 = await getBirthdays(mysql, guild.id, servantBday);
-                let birthdayCountdowns = await getBirthdayCountdowns(birthdays2);
+                    if (birthdayCountdowns.size === 0) {
+                        // No birthdays
+                        embed.addField('.', 'No birthdays were set.', false);
+                    } else {
+                        birthdayCountdowns = sortMapByValue(birthdayCountdowns);
+                        let contentTotalLength = 0;
 
-                if (birthdayCountdowns.size === 0) {
-                    // No birthdays
-                    embed.addField(".", "No birthdays were set.", false);
-                } else {
-                    birthdayCountdowns = sortMapByValue(birthdayCountdowns);
-                    let contentTotalLength = 0;
+                        let content = '```c\n' +
+                            'Countdown   Date       Name\n' +
+                            '----------- ---------- ----------------\n';
 
-                    let content = "```c\n" +
-                        "Countdown   Date       Name\n" +
-                        "----------- ---------- ----------------\n";
+                        for (let entry of birthdayCountdowns.entries()) {
+                            let key = entry[0];
+                            let value = entry[1];
 
-                    for (let entry of birthdayCountdowns.entries()) {
-                        let key = entry[0];
-                        let value = entry[1];
-
-                        if (content.length >= 1024 - 57 - 3) {
-                            contentTotalLength += content.length;
-                            if (contentTotalLength > 6000) break;
-                            else {
-                                embed.addField(".", content, false);
-                                content = '```c\n';
+                            if (content.length >= 1024 - 57 - 3) {
+                                contentTotalLength += content.length;
+                                if (contentTotalLength > 6000) break;
+                                else {
+                                    embed.addField('.', content, false);
+                                    content = '```c\n';
+                                }
                             }
+
+                            content +=
+                                `in ${indentDays(value)} ${(value == 1 ? 'day ' : 'days')} ${birthdays2.get(key)} ${bot.users.cache.get(key).username}\n`;
                         }
 
                         content +=
-                            `in ${indentDays(value)} ${(value == 1 ? "day " : "days")} ${birthdays2.get(key)} ${bot.users.cache.get(key).username}\n`;
+                            '```';
+
+                        contentTotalLength += content.length;
+
+                        if (contentTotalLength <= 6000) embed.addField('.', content, false);
                     }
 
-                    content +=
-                        "```";
-
-                    contentTotalLength += content.length;
-
-                    if (contentTotalLength <= 6000) embed.addField(".", content, false);
+                    if (channel) {
+                        let message = await channel.send(embed);
+                        messageId = message.id;
+                    }
                 }
 
-                let messageId = 0;
-                if (channel) {
-                    let message = await channel.send(embed);
-                    messageId = message.id;
+                // Update guild_birthdays
+
+                // Delete old entry
+                sql = nws`
+                    DELETE FROM guild_birthdays
+                    WHERE guild_id=${mysql.escape(guildId)}
+                `;
+
+                await mysql.query(sql);
+
+                // Create new entry
+                sql = nws`
+                    INSERT INTO guild_birthdays (guild_id,list_tc_id,list_msg_id,list_author_id,servant_bday,announcement_tc_id)
+                    VALUES (
+                        ${mysql.escape(guildId)},
+                        ${mysql.escape(listTcId)},
+                        ${mysql.escape(messageId)},
+                        ${mysql.escape(userId)},
+                        ${mysql.escape(getBoolean(servantBday))},
+                        ${mysql.escape(announcementTcId)}
+                    )
+                `;
+
+                await mysql.query(sql);
+
+                // Update guild_birthday_roles
+
+                // Delete old entries
+                sql = nws`
+                    DELETE FROM guild_birthday_roles
+                    WHERE guild_id=${mysql.escape(guildId)}
+                `;
+
+                await mysql.query(sql);
+
+                // Create new entries
+                for (const i in birthdayRoles) {
+                    const roleId = birthdayRoles[i];
+
+                    sql = nws`
+                        INSERT INTO guild_birthday_roles (guild_id,role_id)
+                        VALUES (
+                            ${mysql.escape(guildId)},
+                            ${mysql.escape(roleId)}
+                        )
+                    `;
+
+                    await mysql.query(sql);
                 }
 
-                setBirthdayDb(res, mysql, guild.id, listTcId, messageId, userId, servantBday, announcementTcId);
+                res.sendStatus(200);
             } else res.render('404', { req });
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    }
-
-    async function setBirthdayDb(res, mysql, guildId, listTcId, messageId, userId, servantBday, announcementTcId) {
-        try {
-            let sql = nws`DELETE FROM guild_birthdays
-                WHERE guild_id=${mysql.escape(guildId)}`;
-
-            await mysql.query(sql);
-
-            sql = nws`INSERT INTO guild_birthdays (guild_id,list_tc_id,list_msg_id,list_author_id,servant_bday,announcement_tc_id)
-                VALUES (${mysql.escape(guildId)},${mysql.escape(listTcId)},${mysql.escape(messageId)},${mysql.escape(userId)},${mysql.escape(getBoolean(servantBday))},${mysql.escape(announcementTcId)})`;
-
-            await mysql.query(sql);
-
-            res.sendStatus(200);
         } catch (err) {
             console.error(err);
             res.sendStatus(500);
@@ -1732,26 +1770,45 @@ module.exports = function (bot) {
             const publicMode = req.body.publicMode;
             const streamerRolesString = req.body.streamerRoles;
             const liveRole = req.body.liveRole;
-            const livestreamPingRole = req.body.livestreamPingRole;
             const tc = req.body.tc;
+            const pingRoles = JSON.parse(req.body.pingRoles); // [ { streamerRoleId: Long, pingRoleIds: [Long, Long, ...]}, { ... } ]
 
             const isAuthorized = await getAuthorization(bot, req, guildId, mysql);
 
             if (isAuthorized) {
                 // First delete all
-                let sql = nws`DELETE FROM guild_livestreams
-                    WHERE guild_id=${mysql.escape(guildId)}`;
+                let sql = nws`
+                    DELETE FROM guild_livestreams
+                    WHERE guild_id=${mysql.escape(guildId)}
+                `;
 
                 await mysql.query(sql);
 
-                sql = nws`DELETE FROM guild_livestreamers
-                    WHERE guild_id=${mysql.escape(guildId)}`;
+                sql = nws`
+                    DELETE FROM guild_livestreamers
+                    WHERE guild_id=${mysql.escape(guildId)}
+                `;
+
+                await mysql.query(sql);
+
+                sql = nws`
+                    DELETE FROM guild_livestream_ping_roles
+                    WHERE guild_id=${mysql.escape(guildId)}
+                `;
 
                 await mysql.query(sql);
 
                 // Second insert data
-                sql = nws`INSERT INTO guild_livestreams (guild_id,is_public,role_id,tc_id,ping_role_id)
-                    VALUES (${mysql.escape(guildId)},${mysql.escape(getBoolean(publicMode))},${mysql.escape(liveRole)},${mysql.escape(tc)},${mysql.escape(livestreamPingRole)})`;
+                sql = nws`
+                    INSERT INTO guild_livestreams (guild_id,is_public,role_id,tc_id,ping_role_id)
+                    VALUES (
+                        ${mysql.escape(guildId)},
+                        ${mysql.escape(getBoolean(publicMode))},
+                        ${mysql.escape(liveRole)},
+                        ${mysql.escape(tc)},
+                        ${mysql.escape(0)}
+                    )
+                `;
 
                 await mysql.query(sql);
 
@@ -1759,8 +1816,31 @@ module.exports = function (bot) {
                     const streamerRoles = streamerRolesString.split('|');
 
                     for (const roleId of streamerRoles) {
-                        let sql = nws`INSERT INTO guild_livestreamers (guild_id,role_id)
-                            VALUES (${mysql.escape(guildId)},${mysql.escape(roleId)})`;
+                        let sql = nws`
+                            INSERT INTO guild_livestreamers (guild_id,role_id)
+                            VALUES (
+                                ${mysql.escape(guildId)},
+                                ${mysql.escape(roleId)}
+                            )
+                        `;
+
+                        await mysql.query(sql);
+                    }
+                }
+
+                // Ping roles
+                for (const pingRole of pingRoles) {
+                    const { streamerRoleId, pingRoleIds } = pingRole;
+
+                    for (const pingRoleId of pingRoleIds) {
+                        sql = nws`
+                            INSERT INTO guild_livestream_ping_roles (guild_id,streamer_role_id,ping_role_id)
+                            VALUES (
+                                ${mysql.escape(guildId)},
+                                ${mysql.escape(streamerRoleId)},
+                                ${mysql.escape(pingRoleId)}
+                            )
+                        `;
 
                         await mysql.query(sql);
                     }

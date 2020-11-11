@@ -84,11 +84,10 @@ const mocWarning = disabledFeatures[0] ? '' : 'checked';
                 <div class="padding-top padding-bottom padding-left padding-right">
                     <form action="/submit/media-only-channel" method="POST" id="form-moc">
                         <div class="settings-disclaimer">
-                            <div class="command-panel-moc">
-                                <span class="cpm-left">
-                                    <div class="cpm-left-top">Media-only channel warning</div>
-                                    <div class="cpm-left-bottom">Upon deleting a message, Servant will post a warning that will be deleted after 30 seconds.</div>
-                                </span>
+                            <div class="ms-title">Warning Notice</div>
+                            <div class="ms-description">If activated, Servant will post a warning that will be deleted after 30 seconds.</div>
+                            <div class="command-panel plugin">
+                                <span>Media-only channel warning</span>
                                 <label class="switch">
                                     <input name="moc-warning" id="moc-warning" type="checkbox" onclick="submitMediaOnlyChannel();" <%= mocWarning %>>
                                     <span class="slider round"></span>
@@ -96,14 +95,9 @@ const mocWarning = disabledFeatures[0] ? '' : 'checked';
                             </div>
                         </div>
 
-                        <br />
-                        <br />
-
                         <div class="settings-disclaimer">
-                            Declare text channels where only links and attachments are allowed. Other messages will be deleted.
-                            <br />
-                            <br />
-                            <span class="multiple-select-label">Media-only Channels</span>
+                            <div class="ms-title">Media-only Channels</div>
+                            <div class="ms-description">Declare text channels where only links and attachments are allowed. Other messages will be deleted.</div>
 
                             <select onchange="submitMediaOnlyChannel();" id="moc-channels" name="moc-channels" data-placeholder="Select text channels..." multiple class="chosen-select">
                                 <% botGuild.channels.cache.forEach(channel => { %>

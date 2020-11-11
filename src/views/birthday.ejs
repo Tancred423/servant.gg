@@ -86,37 +86,8 @@ const listTcId = guildBirthdays.length > 0 ? guildBirthdays[0].list_tc_id : 0;
 
                 <form action="/submit/birthday" method="POST" id="form-birthday">
                     <div class="birthday settings-disclaimer">
-                        <div>Include Servant's birthday in the list.</div>
-                        <div class="command-panel">
-                            <span>Servant's Birthday</span>
-                            <label class="switch">
-                                <input name="birthday-servant" id="birthday-servant" type="checkbox" onclick="submitBirthday();" <%= servantBday %>>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="birthday settings-disclaimer">
-                        <div>This is the text channel the announcement will be posted in.</div>
-                        <br />
-                        <div class="form-group embed">
-                            <select id="tc" name="tc" onchange="changeTcSel(this); submitBirthday();" required>
-                                <% const tcDefaultSelected = announcementTcId == 0 ? 'selected' : ''; %>
-                                <option value="0" <%= tcDefaultSelected %>>No text channel (Announcement disabled)</option>
-                                <% botGuild.channels.cache.forEach(channel => { %>
-                                <%     if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
-                                <%         const tcSelected = announcementTcId == channel.id ? 'selected' : '';  %>
-                                <option value="<%= channel.id %>" <%= tcSelected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
-                                <%     } %>
-                                <% });  %>
-                            </select>
-                            <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>
-                        </div>
-                    </div>
-
-                    <div class="birthday settings-disclaimer">
-                        <div>This is the text channel the list will be posted in.<br />As soon as you change the text channel, the list will be posted (or deleted).</div>
-                        <br />
+                        <div class="ms-title">Birthday List</div>
+                        <div class="ms-description">This is the text channel the list will be posted in.<br />As soon as you change the text channel, the list will be posted (or deleted).</div>
                         <div class="form-group embed">
                             <select id="tc-list" name="tc-list" onchange="changeTcSel(this); submitBirthday();" required>
                                 <% const tcDefaultSelectedList = listTcId == 0 ? 'selected' : ''; %>
@@ -128,12 +99,63 @@ const listTcId = guildBirthdays.length > 0 ? guildBirthdays[0].list_tc_id : 0;
                                 <%     } %>
                                 <% }); %>
                             </select>
-                            <label for="tc-list" class="control-label">Text Channel</label><i class="bar"></i>
+                            <i class="bar"></i>
+                        </div>
+                    </div>
+
+                    <div class="birthday settings-disclaimer">
+                        <div class="ms-title">Birthday Announcement</div>
+                        <div class="ms-description">This is the text channel the announcement will be posted in.</div>
+                        <div class="form-group embed">
+                            <select id="tc" name="tc" onchange="changeTcSel(this); submitBirthday();" required>
+                                <% const tcDefaultSelected = announcementTcId == 0 ? 'selected' : ''; %>
+                                <option value="0" <%= tcDefaultSelected %>>No text channel (Announcement disabled)</option>
+                                <% botGuild.channels.cache.forEach(channel => { %>
+                                <%     if ((channel.type === 'text' || channel.type === 'news') && channel.viewable) { %>
+                                <%         const tcSelected = announcementTcId == channel.id ? 'selected' : '';  %>
+                                <option value="<%= channel.id %>" <%= tcSelected %>>#<%= channel.name %> <%= channel.parent ? '(' + channel.parent.name + ')' : '' %></option>
+                                <%     } %>
+                                <% });  %>
+                            </select>
+                            <i class="bar"></i>
+                        </div>
+                    </div>
+
+                    <div class="birthday settings-disclaimer">
+                        <div class="ms-title">Birthday Roles</div>
+                        <div class="ms-description">These roles will be granted on a birthday and taken away afterwards.</div>
+                        <select onchange="submitBirthday();" id="birthday-roles" name="birthday-roles" data-placeholder="Select roles..." multiple class="chosen-select">
+                            <%  botGuild.roles.cache.forEach(role => { %>
+                            <%      let selected = ""; %>
+                            <%      birthdayRoles.forEach(birthdayRole => { %>
+                            <%          if (birthdayRole.role_id === role.id) { %>
+                            <%              selected = "selected"; %>
+                            <%          } %>
+                            <%      }); %>
+
+                            <%      if (role.name !== '@everyone') { %>
+                            <%          const colorcode = role.color === 0 ? "FFFFFF" : role.color.toString(16); %>
+                            <option value="<%= role.id %>" style="color: #<%= colorcode %>;" <%= selected %>>
+                                <%= role.name %>
+                            </option>
+                            <%      } %>
+
+                            <%  }); %>
+                        </select>
+                    </div>
+
+                    <div class="birthday settings-disclaimer">
+                        <div class="command-panel plugin">
+                            <span>Include Servant's birthday to the list.</span>
+                            <label class="switch">
+                                <input name="birthday-servant" id="birthday-servant" type="checkbox" onclick="submitBirthday();" <%= servantBday %>>
+                                <span class="slider round"></span>
+                            </label>
                         </div>
                     </div>
 
                     <!-- to include it in url params -->
-                    <input type="hidden" id="guild-user-id" name="guild-user-id" value="<%= guild.id %>|<%= req.user.discordId %>" />
+                    <input type="hidden" id="guild-user-id" name="guild-user-id" value="<%= guild.id %>" />
                 </form>
             </div>
         </div>

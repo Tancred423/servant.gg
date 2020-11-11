@@ -1041,13 +1041,6 @@ function submitModRoles() {
     typingTimer = setTimeout(submitGs, interval2s);
 }
 
-// Mod role selection to color 'no mod role' gray
-$("#mod").change(() => {
-    if ($(this).val() == "0") $(this).addClass("empty-option");
-    else $(this).removeClass("empty-option")
-});
-$("#mod").change();
-
 // Submit guild settings
 $('#send-gs').click((event) => {
     event.preventDefault();
@@ -1061,7 +1054,6 @@ $('#send-gs').click((event) => {
             guildId: $('#guild-id').val(),
             prefix: $('#prefix').val(),
             language: $('#language').val(),
-            modRole: $('#mod').val(),
             achievements: $('#achievements').is(':checked'),
             cmddeletion: $('#cmddeletion').is(':checked'),
             eastereggs: $('#eastereggs').is(':checked'),
@@ -2072,9 +2064,7 @@ function submitBestOfQuote() {
 
 // Birthday plugin
 function submitBirthday() {
-    let guildUser = $('#guild-user-id').val();
-    let guildId = guildUser.split("|")[0];
-    let userId = guildUser.split("|")[1];
+    let guildId = $('#guild-user-id').val()
 
     circleLoading();
     $.ajax({
@@ -2087,7 +2077,7 @@ function submitBirthday() {
             servantBday: $('#birthday-servant').is(':checked'),
             announcementTcId: $('#tc').val(),
             listTcId: $('#tc-list').val(),
-            userId: userId
+            birthdayRoles: JSON.stringify($('#birthday-roles').val()),
         },
         success: () => {
             setTimeout(() => {
@@ -2156,13 +2146,13 @@ function openModalCreateCc() {
             '            <div class="container small dark">' +
             '                <div class="padding-top padding-bottom padding-left padding-right">' +
             '                    <div class="settings-disclaimer embed tc">' +
-            '                        <div>This is how the command will be used.</div>' +
-            '                        <br />' +
+            '                        <div class="ms-title">Command Name (Invoke)</div>' +
+            '                        <div class="ms-description">This is how the command will be used.</div>' +
             '                        <div class="invoke-wrapper">' +
             '                           <div class="prefix">' + globalPrefix + '</div>' +
             '                           <div class="form-group embed invoke-div">' +
             '                               <input type="text" id="invoke" name="invoke" maxlength="100" title="No spaces allowed!" pattern="[^\' \']+" required>' +
-            '                               <label for="invoke" class="control-label">Command Name (Invoke)</label><i class="bar"></i>' +
+            '                               <i class="bar"></i>' +
             '                           </div>' +
             '                        </div>' +
             '                    </div>' +
@@ -2172,7 +2162,8 @@ function openModalCreateCc() {
             '           <div class="container small dark">' +
             '               <div class="padding-top padding-bottom padding-left padding-right">' +
             '                   <div class="settings-disclaimer embed">' +
-            '                       <div>Command aliases. Seperate multiple aliases by comma. (Max. 10)</div>' +
+            '                        <div class="ms-title">Command Aliases</div>' +
+            '                        <div class="ms-description">The command may also be used with an alias. Seperate multiple aliases by comma. (Max. 10)</div>' +
             '                       <div class="tags-input" data-name="tags-input">' +
             '                       </div>' +
             '                   </div>' +
@@ -2649,13 +2640,13 @@ function openModalEditCc(button) {
                     '            <div class="container small dark">' +
                     '                <div class="padding-top padding-bottom padding-left padding-right">' +
                     '                    <div class="settings-disclaimer embed tc">' +
-                    '                        <div>This is how the command will be used.</div>' +
-                    '                        <br />' +
+                    '                        <div class="ms-title">Command Name (Invoke)</div>' +
+                    '                        <div class="ms-description">This is how the command will be used.</div>' +
                     '                        <div class="invoke-wrapper">' +
                     '                           <div class="prefix">' + globalPrefix + '</div>' +
                     '                           <div class="form-group embed invoke-div">' +
                     '                               <input type="text" id="invoke" name="invoke" maxlength="100" required value="' + invoke + '">' +
-                    '                               <label for="invoke" class="control-label">Command Name (Invoke)</label><i class="bar"></i>' +
+                    '                               <i class="bar"></i>' +
                     '                           </div>' +
                     '                        </div>' +
                     '                    </div>' +
@@ -2665,7 +2656,8 @@ function openModalEditCc(button) {
                     '           <div class="container small dark">' +
                     '               <div class="padding-top padding-bottom padding-left padding-right">' +
                     '                   <div class="settings-disclaimer embed">' +
-                    '                       <div>Command aliases. Seperate multiple aliases by comma. (Max. 10)</div>' +
+                    '                        <div class="ms-title">Command Aliases</div>' +
+                    '                        <div class="ms-description">The command may also be used with an alias. Seperate multiple aliases by comma. (Max. 10)</div>' +
                     '                       <div class="tags-input" data-name="tags-input">' +
                     '                       </div>' +
                     '                   </div>' +
@@ -3550,6 +3542,25 @@ function handleLivestreamSelect() {
 }
 
 function submitLivestream() {
+    // Get ping roles
+    let pingRoles = new Map(); // Key: Long, Value: Array<Long>
+
+    $('.roles').each(function () {
+        const streamerRoleIds = $(this).find('[id^="ping-streamer-roles-"]').val();
+
+        for (const i in streamerRoleIds) {
+            const streamerRoleId = streamerRoleIds[i];
+            const pingRoleIds = $(this).find('[id^="ping-roles-"]').val();
+            pingRoles.set(streamerRoleId,
+                pingRoles.has(streamerRoleId) ?
+                    pingRoles.get(streamerRoleId).concat(pingRoleIds) :
+                    pingRoleIds
+            );
+        }
+    });
+
+    const pingRolesArray = Array.from(pingRoles, ([streamerRoleId, pingRoleIds]) => ({ streamerRoleId, pingRoleIds }));
+
     circleLoading();
     $.ajax({
         global: false,
@@ -3561,8 +3572,8 @@ function submitLivestream() {
             publicMode: $('#livestream-public').is(':checked'),
             streamerRoles: $('#livestream-roles').val().join('|'),
             liveRole: $('#livestream-role').val(),
-            livestreamPingRole: $('#livestream-ping-role').val(),
-            tc: $('#tc').val()
+            tc: $('#tc').val(),
+            pingRoles: JSON.stringify(pingRolesArray)
         },
         success: () => {
             setTimeout(() => {
@@ -3575,6 +3586,73 @@ function submitLivestream() {
             }, 1000);
         }
     });
+}
+
+$(document).ready(() => {
+    if (window.location.href.endsWith('level')) {
+        lrAi = $('.chosen-container').length;;
+        lrI = $('.chosen-container').length;;
+    }
+});
+
+var lprAi = 1; // Current amount of livestream ping roles
+var lprMax = 10; // Maximum amount of livestream ping roles
+var lprI = 1; // Auto increment number of livestream ping roles to provide unique ID's
+
+function addLivestreamPingRole() {
+    if (lprAi >= lprMax) {
+        alert('You have reached the limits!');
+    } else {
+        let html = `
+            <div class="roles livestream">
+                <span class="delete-livestream-role" onclick="deleteLivestreamPingRole(this)"><i class="fas fa-times-circle"></i></span>
+
+                <select onchange="handleLivestreamSelect();" id="ping-streamer-roles-${lprI}" name="ping-streamer-roles-${lprI}" data-placeholder="Select streamer roles..." multiple class="chosen-select">
+        `;
+
+        globalBotRoles.forEach(role => {
+            if (role.name !== "@everyone") {
+                globalStreamerRoles.forEach(streamerRole => {
+                    if (streamerRole.role_id === role.id) {
+                        html += `
+                            <option style="color: #${role.color.toString(16)}" value="${role.id}">${role.name}</option>
+                        `;
+                    }
+                });
+            }
+        });
+
+        html += `
+                </select>
+
+                <select onchange="handleLivestreamSelect();" id="ping-roles-${lprI}" name="ping-roles-${lprI}" data-placeholder="Select ping roles..." multiple class="chosen-select">
+        `;
+
+        globalBotRoles.forEach(role => {
+            if (role.name !== "@everyone") {
+                html += `
+                    <option style="color: #${role.color.toString(16)}" value="${role.id}">${role.name}</option>
+                `;
+            }
+        });
+
+        html += `
+                </select>
+            </div>
+        `;
+
+        $("#ping-roles").append(html);
+
+        addChosen();
+        lprAi++;
+        lprI++;
+    }
+}
+
+function deleteLivestreamPingRole(thisspan) {
+    thisspan.closest(".roles").remove();
+    lprAi--;
+    submitLivestream();
 }
 
 // Log plugin
@@ -3791,8 +3869,8 @@ function openModalCreate() {
             '            <div class="container small dark">' +
             '                <div class="padding-top padding-bottom padding-left padding-right">' +
             '                    <div class="settings-disclaimer embed tc">' +
-            '                        <div>This is the text channel the embed message will be posted in.</div>' +
-            '                        <br />' +
+            '                        <div class="ms-title">Text Channel</div>' +
+            '                        <div class="ms-description">This is the text channel the reaction role message will be posted in.</div>' +
             '                        <div class="form-group embed">' +
             '                            <select id="tc-create" name="tc" onchange="changeTcSel(this);" required>' +
             '                                <option value="" selected disabled>Please select a text channel</option>';
@@ -3807,7 +3885,7 @@ function openModalCreate() {
 
         html +=
             '                            </select>' +
-            '                            <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>' +
+            '                            <i class="bar"></i>' +
             '                        </div>' +
             '                    </div>' +
             '                </div>' +
@@ -4105,8 +4183,8 @@ function openModalEdit(button) {
                     '            <div class="container small dark">' +
                     '                <div class="padding-top padding-bottom padding-left padding-right">' +
                     '                    <div class="settings-disclaimer embed tc">' +
-                    '                        <div>It is not possible to change the text channel of an already posted message.</div>' +
-                    '                        <br />' +
+                    '                        <div class="ms-title">Text Channel</div>' +
+                    '                        <div class="ms-description">It is not possible to change the text channel of an already posted message.</div>' +
                     '                        <div class="form-group embed">' +
 
                     '                            <select id="tc-edit" name="tc" onchange="changeTcSel(this);" required disabled>' +
@@ -4122,7 +4200,7 @@ function openModalEdit(button) {
 
                 html +=
                     '                            </select>' +
-                    '                            <label for="tc" class="control-label">Text Channel</label><i class="bar"></i>' +
+                    '                            <i class="bar"></i>' +
                     '                        </div>' +
                     '                    </div>' +
                     '                </div>' +

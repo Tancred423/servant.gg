@@ -332,7 +332,6 @@ module.exports = function (bot) {
             "wave", "greet",
             "wink",
             // Random
-            "random", "imgur",
             "bird", "birb",
             "cat", "catto",
             "dog", "doggo",

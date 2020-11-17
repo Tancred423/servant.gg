@@ -633,44 +633,37 @@ $(document).ready(() => {
                     break;
 
                 // Random
-                case 'random':
-                case 'imgur':
-                    clickDefaultTab('random');
-                    instance = instances[5];
-                    instance.open(0);
-                    break;
-
                 case 'bird':
                 case 'birb':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(1);
+                    instance.open(0);
                     break;
 
                 case 'cat':
                 case 'catto':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(2);
+                    instance.open(1);
                     break;
 
                 case 'dog':
                 case 'doggo':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(3);
+                    instance.open(2);
                     break;
 
                 case 'fennec':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(4);
+                    instance.open(3);
                     break;
 
                 case 'fox':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(5);
+                    instance.open(4);
                     break;
 
                 case 'frog':
@@ -679,46 +672,46 @@ $(document).ready(() => {
                 case 'anet':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(6);
+                    instance.open(5);
                     break;
 
                 case 'koala':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(7);
+                    instance.open(6);
                     break;
 
                 case 'panda':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(8);
+                    instance.open(7);
                     break;
 
                 case 'pikachu':
                 case 'pika':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(9);
+                    instance.open(8);
                     break;
 
                 case 'redpanda':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(10);
+                    instance.open(9);
                     break;
 
                 case 'sloth':
                 case 'hirik0':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(11);
+                    instance.open(10);
                     break;
 
                 case 'wolf':
                 case 'wulf':
                     clickDefaultTab('random');
                     instance = instances[5];
-                    instance.open(12);
+                    instance.open(11);
                     break;
 
                 default:

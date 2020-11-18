@@ -1,6 +1,5 @@
-global.devMode = true;
-
-require('dotenv').config({ path: devMode ? 'D:/OneDrive/Documents/Programming/SERVANT GROUP/servant.gg/.env' : '/var/www/servant.gg/.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('./strategies/discordstrategy');
 const express = require('express');
 const app = express();
@@ -9,7 +8,6 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const passport = require('passport');
 const db = require('./database/database');
-const path = require('path');
 const mongoose = require('mongoose');
 const { Client } = require('discord.js');
 const bodyParser = require('body-parser');

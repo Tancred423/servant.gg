@@ -1,4 +1,5 @@
-require('dotenv').config({ path: devMode ? 'D:/OneDrive/Documents/Programming/SERVANT GROUP/servant.gg/.env' : '/var/www/servant.gg/.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const DiscordStrategy = require('passport-discord').Strategy;
 const passport = require('passport');
 const DiscordUser = require('../models/DiscordUser');
